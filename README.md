@@ -4,7 +4,7 @@ A minimal keepsake wedding certificate for Adam (`nova.af`) and Maria (`llittlea
 
 ---
 
-## ✨ Features
+## Features
 
 - **Live Real-Time Synchronization (Supabase Realtime):**
   - Signatures sync between devices in real time as you draw.
@@ -27,13 +27,13 @@ A minimal keepsake wedding certificate for Adam (`nova.af`) and Maria (`llittlea
 
 ---
 
-## 🚀 Deploy on Vercel
+## Deploy on Vercel
 
 1. Push this repository to GitHub.
 2. Import the repository into [Vercel](https://vercel.com/).
 3. Framework Preset: **Other** (Static Site). No build command needed.
 4. Set your private passcode in Vercel:
-   - Go to **Project Settings** → **Environment Variables**.
+   - Go to **Project Settings** -> **Environment Variables**.
    - Key: `CERTIFICATE_PIN`
    - Value: `your_secret_passcode` (e.g. any PIN or password you choose).
    - Environments: Production, Preview, Development.
@@ -42,7 +42,7 @@ A minimal keepsake wedding certificate for Adam (`nova.af`) and Maria (`llittlea
 
 ---
 
-## 🔒 Permanent Keepsake & Offline Resilience
+## Permanent Keepsake & Offline Resilience
 
 - **Zero-Downtime Digital Proof:** Both Adam & Maria's pristine signatures, vows, and dates are baked into the certificate baseline. Even if Supabase pauses or sleeps due to free-tier inactivity, the certificate displays immediately with 100% fidelity.
 - **Secure Serverless Validation:** The passcode is validated securely through Vercel's serverless backend (`/api/verify-pin`), meaning the password is never exposed in browser source code or network bundles.

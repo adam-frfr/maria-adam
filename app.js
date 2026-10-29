@@ -373,7 +373,7 @@
 
       if (notify) {
         const signerName = partnerId === 1 ? (nameP1.textContent.trim() || 'Adam') : (nameP2.textContent.trim() || 'Maria');
-        showToast(`${signerName}'s signature placed! ✨`);
+        showToast(`${signerName}'s signature placed.`);
       }
     };
     img.src = dataUrl;
@@ -801,7 +801,7 @@
     if (isSuccess) {
       closePinModal();
       setLockState(false);
-      showToast('Certificate unlocked! Editing enabled ✏️');
+      showToast('Certificate unlocked. Editing enabled.');
     } else {
       if (pinError) pinError.classList.add('visible');
       pinInput.focus();
@@ -1032,7 +1032,7 @@
         setLockState(true);
         saveLocalState();
         saveToDatabaseDebounced();
-        showToast('Certificate saved & locked! 🔒');
+        showToast('Certificate saved and locked.');
       });
     }
   }
