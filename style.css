@@ -191,7 +191,7 @@ html, body {
   border: 1px solid var(--border-outer);
   padding: 8px;
   position: relative;
-  background: #ffffff;
+  background: var(--bg-paper);
 }
 
 .corner-flourish {
@@ -221,7 +221,7 @@ html, body {
   align-items: center;
   text-align: center;
   position: relative;
-  background: #ffffff;
+  background: var(--bg-paper);
 }
 
 /* ==========================================================================
@@ -486,15 +486,6 @@ html, body {
   position: relative;
 }
 
-.signature-block {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-
 .signature-pad-container {
   width: 100%;
   height: clamp(65px, 16vw, 85px);
@@ -506,6 +497,9 @@ html, body {
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .signature-pad-container:hover {
@@ -515,24 +509,31 @@ html, body {
 .sig-tap-hint {
   position: absolute;
   font-family: var(--font-sans);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  color: var(--text-subtle);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
   pointer-events: none;
   user-select: none;
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
-  padding-bottom: 1px;
-  transition: opacity 0.2s ease;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.035);
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .sig-tap-hint.hidden {
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .signature-canvas {
   width: 100%;
   height: 100%;
-  touch-action: none;
+  pointer-events: none !important;
   background: transparent !important;
   display: block;
 }
@@ -541,17 +542,18 @@ html, body {
   position: absolute;
   top: 2px;
   right: 2px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: var(--font-sans);
   font-size: 0.62rem;
   letter-spacing: 0.05em;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 1px 5px;
+  padding: 2px 6px;
   border-radius: 3px;
   transition: all 0.15s ease;
-  z-index: 5;
+  z-index: 10;
+  pointer-events: auto;
 }
 
 .btn-clear-sig:hover {
@@ -563,27 +565,27 @@ html, body {
 .signature-line {
   width: 100%;
   height: 1px;
-  background-color: var(--text-primary);
-  margin-top: 3px;
-  margin-bottom: 3px;
-}
-
-.signature-label {
-  font-family: var(--font-sans);
-  font-size: clamp(0.55rem, 2vw, 0.68rem);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 0.15rem;
-  white-space: nowrap;
+  background-color: var(--border-outer);
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 .signature-name {
   font-family: var(--font-serif);
-  font-size: clamp(0.92rem, 3.2vw, 1.05rem);
+  font-size: clamp(0.95rem, 3.4vw, 1.15rem);
   font-style: italic;
   color: var(--text-primary);
+  margin-bottom: 1px;
+  white-space: nowrap;
+}
+
+.signature-label {
+  font-family: var(--font-sans);
+  font-size: clamp(0.55rem, 2vw, 0.65rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -607,7 +609,7 @@ html, body {
 .sig-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(18, 17, 16, 0.58);
+  background: rgba(18, 17, 16, 0.62);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
@@ -616,20 +618,20 @@ html, body {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalFade 0.15s ease-out;
 }
 
-@keyframes modalPop {
-  0% { transform: scale(0.94); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes modalFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 .sig-modal-header {
@@ -640,7 +642,7 @@ html, body {
 
 .sig-modal-title {
   font-family: var(--font-serif);
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.15;
@@ -648,7 +650,7 @@ html, body {
 
 .sig-modal-desc {
   font-family: var(--font-sans);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -656,7 +658,7 @@ html, body {
 .modal-close-btn {
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1;
   color: var(--text-subtle);
   cursor: pointer;
@@ -670,29 +672,33 @@ html, body {
 .modal-canvas-wrapper {
   position: relative;
   width: 100%;
-  height: 240px;
+  height: clamp(250px, 46vh, 320px);
   background: #fdfbf7;
   border: 1.5px dashed var(--border-outer);
   border-radius: 8px;
   overflow: hidden;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
 
 .modal-canvas {
   width: 100%;
   height: 100%;
-  touch-action: none;
+  touch-action: none !important;
   cursor: crosshair;
-  background: transparent;
+  background: transparent !important;
   display: block;
 }
 
 .modal-sig-guideline {
   position: absolute;
-  bottom: 46px;
+  bottom: 50px;
   left: 20px;
   right: 20px;
   height: 1px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.12);
   pointer-events: none;
 }
 
@@ -719,6 +725,23 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .sig-modal {
+    padding: 0.4rem;
+    align-items: flex-end;
+  }
+
+  .sig-modal-card {
+    max-width: 100%;
+    padding: 1.1rem 0.85rem;
+    border-radius: 14px 14px 8px 8px;
+  }
+
+  .modal-canvas-wrapper {
+    height: clamp(260px, 52vh, 340px);
+  }
 }
 .cert-footer {
   margin-top: 0.6rem;
@@ -817,14 +840,16 @@ html, body {
 .force-landscape-export .cert-frame-outer {
   padding: 12px !important;
   box-sizing: border-box !important;
+  background: #fefdfb !important;
 }
 
 .force-landscape-export .cert-frame-inner {
-  padding: 32px 48px 22px 48px !important;
+  padding: 30px 48px 24px 48px !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
+  background: #fefdfb !important;
 }
 
 .force-landscape-export .signature-pad-container {

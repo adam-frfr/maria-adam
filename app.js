@@ -44,13 +44,15 @@
       el: document.getElementById('canvas-sig-1'),
       clearBtn: document.getElementById('btn-clear-sig1'),
       ctx: null,
-      hasSignature: false
+      hasSignature: false,
+      dataUrl: null
     },
     2: {
       el: document.getElementById('canvas-sig-2'),
       clearBtn: document.getElementById('btn-clear-sig2'),
       ctx: null,
-      hasSignature: false
+      hasSignature: false,
+      dataUrl: null
     }
   };
 
@@ -218,8 +220,8 @@
         p2_handle: handleP2.textContent.trim(),
         ceremony_date: certDate.textContent.trim(),
         vows: certVows.textContent.trim(),
-        sig1: sigPads[1].hasSignature ? sigPads[1].el.toDataURL() : null,
-        sig2: sigPads[2].hasSignature ? sigPads[2].el.toDataURL() : null,
+        sig1: sigPads[1].hasSignature ? sigPads[1].dataUrl : null,
+        sig2: sigPads[2].hasSignature ? sigPads[2].dataUrl : null,
         updated_at: new Date().toISOString()
       };
 
@@ -278,27 +280,15 @@
     if (!pad) return;
 
     if (clear) {
-      pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
+      if (pad.ctx) pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
       pad.hasSignature = false;
+      pad.dataUrl = null;
       if (hint) hint.classList.remove('hidden');
-      showToast(`Signature cleared`);
       return;
     }
 
     if (dataUrl) {
-      const img = new Image();
-      img.onload = () => {
-        pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
-        const rect = pad.el.getBoundingClientRect();
-        const width = rect.width || pad.el.parentElement.clientWidth || 140;
-        const height = rect.height || pad.el.parentElement.clientHeight || 75;
-        pad.ctx.drawImage(img, 0, 0, width, height);
-        pad.hasSignature = true;
-        if (hint) hint.classList.add('hidden');
-        const signerName = partnerId === 1 ? (nameP1.textContent.trim() || 'Partner 1') : (nameP2.textContent.trim() || 'Partner 2');
-        showToast(`${signerName} signed!`);
-      };
-      img.src = dataUrl;
+      placeSignatureOnPad(partnerId, dataUrl, true);
     }
   }
 
@@ -308,6 +298,106 @@
       el.textContent = text;
       syncDependentFields();
     }
+  }
+
+  // --- SIGNATURE PLACEMENT & ASPECT-RATIO ENGINE ---
+  function placeSignatureOnPad(partnerId, dataUrl, notify = false) {
+    const pad = sigPads[partnerId];
+    const hint = document.getElementById(`sig-hint-${partnerId}`);
+    if (!pad || !dataUrl) return;
+
+    pad.dataUrl = dataUrl;
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = pad.el;
+      const ctx = pad.ctx || canvas.getContext('2d');
+      pad.ctx = ctx;
+
+      const dpr = Math.max(window.devicePixelRatio || 1, 2);
+      const rect = canvas.getBoundingClientRect();
+      const cssW = rect.width || canvas.parentElement.clientWidth || 160;
+      const cssH = rect.height || canvas.parentElement.clientHeight || 75;
+
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fit maintaining natural handwriting proportions with comfortable breathing room
+      const maxW = cssW * 0.94;
+      const maxH = cssH * 0.90;
+      const ratio = img.width / img.height;
+      let drawW, drawH;
+
+      if (ratio > (maxW / maxH)) {
+        drawW = maxW;
+        drawH = maxW / ratio;
+      } else {
+        drawH = maxH;
+        drawW = maxH * ratio;
+      }
+
+      const drawX = (cssW - drawW) / 2;
+      const drawY = (cssH - drawH) / 2;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+      ctx.restore();
+
+      pad.hasSignature = true;
+      if (hint) hint.classList.add('hidden');
+
+      if (notify) {
+        const signerName = partnerId === 1 ? (nameP1.textContent.trim() || 'Adam') : (nameP2.textContent.trim() || 'Maria');
+        showToast(`${signerName}'s signature placed! ✨`);
+      }
+    };
+    img.src = dataUrl;
+  }
+
+  // Extracts tight bounding box around actual ink strokes to avoid distortion
+  function getCanvasBoundingBox(canvas) {
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    if (width === 0 || height === 0) return null;
+
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = new Uint32Array(imgData.data.buffer);
+
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+    let found = false;
+
+    for (let y = 0; y < height; y++) {
+      const rowOffset = y * width;
+      for (let x = 0; x < width; x++) {
+        const pixel = data[rowOffset + x];
+        const alpha = (pixel >> 24) & 0xff;
+        if (alpha > 15) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+          found = true;
+        }
+      }
+    }
+
+    if (!found) return null;
+
+    const strokeWidth = maxX - minX;
+    const strokeHeight = maxY - minY;
+    const padX = Math.round(strokeWidth * 0.05);
+    const padY = Math.round(strokeHeight * 0.08);
+
+    const cropX = Math.max(0, minX - padX);
+    const cropY = Math.max(0, minY - padY);
+    const cropW = Math.min(width - cropX, strokeWidth + padX * 2);
+    const cropH = Math.min(height - cropY, strokeHeight + padY * 2);
+
+    return { x: cropX, y: cropY, width: cropW, height: cropH };
   }
 
   // --- SMOOTH O(1) DRAWING ENGINE (ZERO LAG) ---
@@ -324,9 +414,18 @@
       clientX = e.clientX;
       clientY = e.clientY;
     }
+
+    const cssX = clientX - rect.left;
+    const cssY = clientY - rect.top;
+
+    // Scale precisely to modal canvas context coordinates
+    const dpr = Math.max(window.devicePixelRatio || 1, 2.5);
+    const scaleX = (canvas.width / dpr) / (rect.width || 1);
+    const scaleY = (canvas.height / dpr) / (rect.height || 1);
+
     return {
-      x: (clientX !== undefined ? clientX : 0) - rect.left,
-      y: (clientY !== undefined ? clientY : 0) - rect.top
+      x: cssX * scaleX,
+      y: cssY * scaleY
     };
   }
 
@@ -337,6 +436,7 @@
 
     function start(e) {
       if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
       isDrawing = true;
       const p = getEventCoords(e, canvas);
       lastPoint = p;
@@ -351,6 +451,7 @@
     function move(e) {
       if (!isDrawing) return;
       if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
 
       const cur = getEventCoords(e, canvas);
       const mid = {
@@ -368,7 +469,7 @@
       lastMidPoint = mid;
     }
 
-    function end() {
+    function end(e) {
       if (!isDrawing) return;
       isDrawing = false;
       lastPoint = null;
@@ -382,7 +483,9 @@
     window.addEventListener('touchcancel', end);
 
     canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mousemove', (e) => {
+      if (isDrawing) move(e);
+    });
     window.addEventListener('mouseup', end);
   }
 
@@ -391,49 +494,27 @@
     [1, 2].forEach(id => {
       const pad = sigPads[id];
       const canvas = pad.el;
-      const ctx = canvas.getContext('2d');
-      pad.ctx = ctx;
+      pad.ctx = canvas.getContext('2d');
 
       function configureCanvasDPR() {
         const dpr = Math.max(window.devicePixelRatio || 1, 2);
         const rect = canvas.getBoundingClientRect();
-        const width = rect.width || canvas.parentElement.clientWidth || 140;
+        const width = rect.width || canvas.parentElement.clientWidth || 160;
         const height = rect.height || canvas.parentElement.clientHeight || 75;
 
-        const temp = document.createElement('canvas');
-        temp.width = canvas.width;
-        temp.height = canvas.height;
-        if (canvas.width > 0 && canvas.height > 0) {
-          temp.getContext('2d').drawImage(canvas, 0, 0);
-        }
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
 
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-
-        ctx.scale(dpr, dpr);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = 2.2;
-        ctx.strokeStyle = '#171615';
-
-        if (temp.width > 0 && temp.height > 0) {
-          ctx.drawImage(temp, 0, 0, width, height);
+        if (pad.dataUrl) {
+          placeSignatureOnPad(id, pad.dataUrl, false);
         }
       }
 
       configureCanvasDPR();
-      setTimeout(configureCanvasDPR, 120);
+      setTimeout(configureCanvasDPR, 150);
       window.addEventListener('resize', debounce(configureCanvasDPR, 200));
 
-      // Bind O(1) smooth drawing directly on inline canvas
-      bindSmoothDrawing(canvas, ctx, () => {
-        pad.hasSignature = true;
-        const hint = document.getElementById(`sig-hint-${id}`);
-        if (hint) hint.classList.add('hidden');
-        broadcastSignature(id, canvas.toDataURL(), false);
-      });
-
-      // Clicking / tapping opens the full-screen spacious signature modal
+      // Clicking / tapping the container opens the spacious studio modal
       const container = document.getElementById(`sig-container-${id}`);
       if (container) {
         container.addEventListener('click', (e) => {
@@ -445,11 +526,14 @@
       // Inline clear button
       pad.clearBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        e.preventDefault();
+        pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
         pad.hasSignature = false;
+        pad.dataUrl = null;
         const hint = document.getElementById(`sig-hint-${id}`);
         if (hint) hint.classList.remove('hidden');
         broadcastSignature(id, null, true);
+        showToast('Signature cleared');
       });
     });
 
@@ -459,33 +543,6 @@
   // --- SPACIOUS SIGNATURE MODAL ENGINE ---
   function setupModalEngine() {
     modalCtx = modalCanvas.getContext('2d');
-
-    function sizeModalCanvas() {
-      const dpr = Math.max(window.devicePixelRatio || 1, 2);
-      const rect = modalCanvas.getBoundingClientRect();
-      const width = rect.width || 460;
-      const height = rect.height || 240;
-
-      const temp = document.createElement('canvas');
-      temp.width = modalCanvas.width;
-      temp.height = modalCanvas.height;
-      if (modalCanvas.width > 0 && modalCanvas.height > 0) {
-        temp.getContext('2d').drawImage(modalCanvas, 0, 0);
-      }
-
-      modalCanvas.width = width * dpr;
-      modalCanvas.height = height * dpr;
-
-      modalCtx.scale(dpr, dpr);
-      modalCtx.lineCap = 'round';
-      modalCtx.lineJoin = 'round';
-      modalCtx.lineWidth = 2.6;
-      modalCtx.strokeStyle = '#171615';
-
-      if (temp.width > 0 && temp.height > 0) {
-        modalCtx.drawImage(temp, 0, 0, width, height);
-      }
-    }
 
     bindSmoothDrawing(modalCanvas, modalCtx, () => {
       modalHasDrawn = true;
@@ -503,26 +560,26 @@
     btnModalDone.addEventListener('click', () => {
       if (modalHasDrawn) {
         const id = activePartnerForModal;
-        const pad = sigPads[id];
-        const dataUrl = modalCanvas.toDataURL('image/png');
+        const bbox = getCanvasBoundingBox(modalCanvas);
 
-        // Draw onto certificate line
-        const img = new Image();
-        img.onload = () => {
-          pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
-          const rect = pad.el.getBoundingClientRect();
-          const w = rect.width || pad.el.parentElement.clientWidth || 140;
-          const h = rect.height || pad.el.parentElement.clientHeight || 75;
-          pad.ctx.drawImage(img, 0, 0, w, h);
-          pad.hasSignature = true;
+        let finalDataUrl;
+        if (bbox && bbox.width > 4 && bbox.height > 4) {
+          const cropCanvas = document.createElement('canvas');
+          cropCanvas.width = bbox.width;
+          cropCanvas.height = bbox.height;
+          const cropCtx = cropCanvas.getContext('2d');
+          cropCtx.drawImage(
+            modalCanvas,
+            bbox.x, bbox.y, bbox.width, bbox.height,
+            0, 0, bbox.width, bbox.height
+          );
+          finalDataUrl = cropCanvas.toDataURL('image/png');
+        } else {
+          finalDataUrl = modalCanvas.toDataURL('image/png');
+        }
 
-          const hint = document.getElementById(`sig-hint-${id}`);
-          if (hint) hint.classList.add('hidden');
-
-          broadcastSignature(id, dataUrl, false);
-          showToast('Signature placed on certificate!');
-        };
-        img.src = dataUrl;
+        placeSignatureOnPad(id, finalDataUrl, true);
+        broadcastSignature(id, finalDataUrl, false);
       }
       closeSignatureModal();
     });
@@ -533,41 +590,59 @@
     const partnerName = partnerId === 1 ? (nameP1.textContent.trim() || 'Adam') : (nameP2.textContent.trim() || 'Maria');
     modalTitle.textContent = `Sign for ${partnerName}`;
 
+    document.body.style.overflow = 'hidden';
     sigModal.classList.add('open');
     sigModal.setAttribute('aria-hidden', 'false');
 
-    // Sizing on open
-    const dpr = Math.max(window.devicePixelRatio || 1, 2);
-    const rect = modalCanvas.getBoundingClientRect();
-    const width = rect.width || 460;
-    const height = rect.height || 240;
+    // Sizing on open (use requestAnimationFrame to get true rendered dimensions)
+    requestAnimationFrame(() => {
+      const dpr = Math.max(window.devicePixelRatio || 1, 2.5);
+      const rect = modalCanvas.getBoundingClientRect();
+      const width = modalCanvas.clientWidth || rect.width || 360;
+      const height = modalCanvas.clientHeight || rect.height || 260;
 
-    modalCanvas.width = width * dpr;
-    modalCanvas.height = height * dpr;
-    modalCtx.scale(dpr, dpr);
-    modalCtx.lineCap = 'round';
-    modalCtx.lineJoin = 'round';
-    modalCtx.lineWidth = 2.6;
-    modalCtx.strokeStyle = '#171615';
-    modalCtx.clearRect(0, 0, width, height);
+      modalCanvas.width = Math.round(width * dpr);
+      modalCanvas.height = Math.round(height * dpr);
 
-    // If signature exists, pre-load so they can edit or view
-    const pad = sigPads[partnerId];
-    if (pad && pad.hasSignature) {
-      const img = new Image();
-      img.onload = () => {
-        modalCtx.drawImage(img, 0, 0, width, height);
-        modalHasDrawn = true;
-      };
-      img.src = pad.el.toDataURL();
-    } else {
-      modalHasDrawn = false;
-    }
+      modalCtx.scale(dpr, dpr);
+      modalCtx.lineCap = 'round';
+      modalCtx.lineJoin = 'round';
+      modalCtx.lineWidth = 2.8;
+      modalCtx.strokeStyle = '#171615';
+      modalCtx.clearRect(0, 0, width, height);
+
+      // If signature already exists, pre-load so they can review or re-draw
+      const pad = sigPads[partnerId];
+      if (pad && pad.hasSignature && pad.dataUrl) {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = width * 0.90;
+          const maxH = height * 0.70;
+          const ratio = img.width / img.height;
+          let dW, dH;
+          if (ratio > (maxW / maxH)) {
+            dW = maxW;
+            dH = maxW / ratio;
+          } else {
+            dH = maxH;
+            dW = maxH * ratio;
+          }
+          const dX = (width - dW) / 2;
+          const dY = (height - dH) / 2;
+          modalCtx.drawImage(img, dX, dY, dW, dH);
+          modalHasDrawn = true;
+        };
+        img.src = pad.dataUrl;
+      } else {
+        modalHasDrawn = false;
+      }
+    });
   }
 
   function closeSignatureModal() {
     sigModal.classList.remove('open');
     sigModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
   }
 
   // --- INLINE EDITING SYNC ---
@@ -610,7 +685,9 @@
         p2Name: nameP2.textContent.trim(),
         p2Handle: handleP2.textContent.trim(),
         date: certDate.textContent.trim(),
-        vows: certVows.textContent.trim()
+        vows: certVows.textContent.trim(),
+        sig1: sigPads[1].hasSignature ? sigPads[1].dataUrl : null,
+        sig2: sigPads[2].hasSignature ? sigPads[2].dataUrl : null
       };
       localStorage.setItem('wedding_cert_state', JSON.stringify(state));
     } catch (e) {}
@@ -641,6 +718,8 @@
           if (s.p2Handle) handleP2.textContent = s.p2Handle;
           if (s.date) certDate.textContent = s.date;
           if (s.vows) certVows.textContent = s.vows;
+          if (s.sig1) placeSignatureOnPad(1, s.sig1, false);
+          if (s.sig2) placeSignatureOnPad(2, s.sig2, false);
         }
       } catch (e) {}
     }
@@ -687,9 +766,9 @@
       offscreen.style.position = 'fixed';
       offscreen.style.left = '-9999px';
       offscreen.style.top = '0';
-      offscreen.style.width = '1060px';
+      offscreen.style.width = '1080px';
       offscreen.style.zIndex = '-9999';
-      offscreen.style.background = '#ffffff';
+      offscreen.style.background = '#fefdfb';
 
       try {
         // Clone certificate and apply full landscape export styling
@@ -701,27 +780,44 @@
         offscreen.appendChild(certClone);
         document.body.appendChild(offscreen);
 
-        // Copy signature drawings to the clone with high-res crispness
-        const dpr = Math.max(window.devicePixelRatio || 1, 2);
+        // Copy signature drawings to the clone with high-res crispness and exact aspect ratio
+        const dpr = Math.max(window.devicePixelRatio || 1, 2.5);
         [1, 2].forEach(id => {
           const liveCanvas = document.getElementById(`canvas-sig-${id}`);
           const cloneCanvas = certClone.querySelector(`#canvas-sig-${id}`);
-          if (liveCanvas && cloneCanvas) {
-            cloneCanvas.width = 280 * dpr;
-            cloneCanvas.height = 90 * dpr;
+          if (cloneCanvas && sigPads[id].hasSignature) {
+            cloneCanvas.width = 300 * dpr;
+            cloneCanvas.height = 100 * dpr;
             const cloneCtx = cloneCanvas.getContext('2d');
             cloneCtx.clearRect(0, 0, cloneCanvas.width, cloneCanvas.height);
-            cloneCtx.drawImage(liveCanvas, 0, 0, cloneCanvas.width, cloneCanvas.height);
+
+            const source = sigPads[id].img || liveCanvas;
+            const sW = source.width || 300;
+            const sH = source.height || 100;
+            const maxW = cloneCanvas.width * 0.94;
+            const maxH = cloneCanvas.height * 0.90;
+            const ratio = sW / sH;
+            let dW, dH;
+            if (ratio > (maxW / maxH)) {
+              dW = maxW;
+              dH = maxW / ratio;
+            } else {
+              dH = maxH;
+              dW = maxH * ratio;
+            }
+            const dX = (cloneCanvas.width - dW) / 2;
+            const dY = (cloneCanvas.height - dH) / 2;
+            cloneCtx.drawImage(source, dX, dY, dW, dH);
           }
         });
 
         // Capture in true horizontal landscape orientation
         const canvas = await html2canvas(certClone, {
-          scale: 3,
+          scale: 2.8,
           backgroundColor: '#fefdfb',
           useCORS: true,
           logging: false,
-          width: 1060,
+          width: 1080,
           windowWidth: 1200
         });
 
