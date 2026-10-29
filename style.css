@@ -1,19 +1,21 @@
 /* ==========================================================================
-   MINIMAL WEDDING CERTIFICATE — ADAM & MARIA
-   Understated, tactile fine-art paper stationery design
+   MINIMAL ARTISAN WEDDING CERTIFICATE — ADAM & MARIA
+   Understated luxury stationery with live real-time sync
    ========================================================================== */
 
 :root {
-  --bg-page: #f5f4f0;
-  --bg-paper: #ffffff;
-  --text-primary: #1c1b1a;
-  --text-secondary: #585550;
-  --text-muted: #8c8880;
-  --text-subtle: #b2ada6;
-  --border-frame: #dcd7ce;
-  --border-inner: #ebe7df;
-  --border-divider: #e0dcd4;
-  --ink-color: #1a1918;
+  --bg-page: #f5f3ee;
+  --bg-paper: #fefdfb;
+  --text-primary: #1f1e1c;
+  --text-secondary: #58544e;
+  --text-muted: #888279;
+  --text-subtle: #b6b0a6;
+
+  --border-outer: #dcd6cb;
+  --border-inner: #ebe5db;
+  --border-divider: #e4ded4;
+  --seal-color: #7b746a;
+  --ink-color: #171615;
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -36,7 +38,7 @@ html, body {
 }
 
 /* ==========================================================================
-   MINIMAL FLOATING ACTION BAR
+   ACTION BAR & REALTIME STATUS
    ========================================================================== */
 .action-bar {
   position: sticky;
@@ -44,11 +46,11 @@ html, body {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(245, 244, 240, 0.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(245, 243, 238, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 0.75rem 1.5rem;
+  padding: 0.65rem 1.5rem;
 }
 
 .action-bar-inner {
@@ -60,10 +62,35 @@ html, body {
   gap: 1rem;
 }
 
-.action-hint {
+.status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.status-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  transition: all 0.3s ease;
+}
+
+.status-indicator-dot.online {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  animation: pulseGreen 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+.status-text {
   font-family: var(--font-sans);
   font-size: 0.78rem;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
@@ -79,11 +106,11 @@ html, body {
   font-size: 0.8rem;
   font-weight: 400;
   letter-spacing: 0.03em;
-  padding: 0.45rem 0.95rem;
+  padding: 0.42rem 0.9rem;
   border-radius: 4px;
   background: transparent;
   color: var(--text-secondary);
-  border: 1px solid var(--border-frame);
+  border: 1px solid var(--border-outer);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -112,43 +139,68 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2.5rem 1rem 4rem 1rem;
+  padding: 2.2rem 1.25rem 4rem 1.25rem;
 }
 
 .certificate-paper {
-  width: 920px;
+  width: 940px;
   max-width: 100%;
   background: var(--bg-paper);
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 12px 36px rgba(0, 0, 0, 0.07);
+    0 1px 3px rgba(0, 0, 0, 0.03),
+    0 14px 40px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
   border-radius: 2px;
-  padding: 28px;
+  padding: 26px;
   position: relative;
 }
 
-/* Clean, Handcrafted Double Frame */
+/* Outer & Inner Delicate Borders */
 .cert-frame-outer {
-  border: 1px solid var(--border-frame);
-  padding: 14px;
+  border: 1px solid var(--border-outer);
+  padding: 12px;
+  position: relative;
+}
+
+.corner-flourish {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  color: var(--border-outer);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.corner-tl { top: -1px; left: -1px; }
+.corner-tr { top: -1px; right: -1px; }
+.corner-bl { bottom: -1px; left: -1px; }
+.corner-br { bottom: -1px; right: -1px; }
+
+.flourish-svg {
+  width: 100%;
+  height: 100%;
 }
 
 .cert-frame-inner {
   border: 1px solid var(--border-inner);
-  padding: 44px 52px;
+  padding: 38px 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  position: relative;
+  background: #ffffff;
 }
 
-/* Inline Editable State */
+/* ==========================================================================
+   INLINE EDITABLE STYLING
+   ========================================================================== */
 [contenteditable="true"] {
   outline: none;
   cursor: text;
-  transition: background-color 0.12s ease;
+  transition: all 0.12s ease;
   border-radius: 2px;
-  padding: 1px 3px;
+  padding: 1px 4px;
 }
 
 [contenteditable="true"]:hover {
@@ -157,34 +209,63 @@ html, body {
 
 [contenteditable="true"]:focus {
   background-color: rgba(0, 0, 0, 0.035);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* ==========================================================================
-   CERTIFICATE HEADER
+   CREST & HEADER
    ========================================================================== */
+.cert-crest {
+  width: 100px;
+  height: 28px;
+  margin-bottom: 0.6rem;
+  color: var(--seal-color);
+  opacity: 0.85;
+}
+
+.crest-svg {
+  width: 100%;
+  height: 100%;
+}
+
 .cert-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.8rem;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.cert-kicker {
+.cert-title {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: 1.5rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.32em;
-  color: var(--text-secondary);
-  margin-bottom: 0.65rem;
+  letter-spacing: 0.24em;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+  line-height: 1.2;
 }
 
-.cert-divider {
-  width: 36px;
-  height: 1px;
-  background-color: var(--border-frame);
-  margin: 0.4rem 0 0.85rem 0;
+.cert-subtitle {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.cert-flourish-line {
+  width: 140px;
+  height: 10px;
+  color: var(--border-outer);
+  margin-bottom: 0.6rem;
+}
+
+.flourish-line-svg {
+  width: 100%;
+  height: 100%;
 }
 
 .cert-lead {
@@ -202,8 +283,8 @@ html, body {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 2.5rem;
-  margin-bottom: 2rem;
+  gap: 2.2rem;
+  margin-bottom: 1.8rem;
   width: 100%;
 }
 
@@ -211,12 +292,12 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 200px;
+  min-width: 220px;
 }
 
 .person-name {
   font-family: var(--font-serif);
-  font-size: 2.85rem;
+  font-size: 2.75rem;
   font-weight: 400;
   font-style: italic;
   line-height: 1.1;
@@ -226,40 +307,46 @@ html, body {
 
 .person-handle {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
-  font-weight: 400;
+  font-size: 0.8rem;
+  font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   margin-top: 0.35rem;
 }
 
 .couple-ampersand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.ampersand-char {
   font-family: var(--font-serif);
   font-size: 2.2rem;
   font-style: italic;
   font-weight: 300;
   color: var(--text-subtle);
-  user-select: none;
 }
 
 /* ==========================================================================
-   CERTIFICATE BODY
+   DECLARATION & VOWS
    ========================================================================== */
 .cert-body {
-  max-width: 620px;
-  margin: 0 auto 2.6rem auto;
+  max-width: 660px;
+  margin: 0 auto 2.2rem auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
 
-.cert-text {
+.cert-statement {
   font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 400;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .editable-inline {
@@ -276,8 +363,24 @@ html, body {
 }
 
 .cert-vows-wrapper {
-  margin-top: 0.6rem;
-  padding: 0 1rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1.75rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.vow-quotemark {
+  font-family: Georgia, serif;
+  font-size: 1.8rem;
+  line-height: 0;
+  color: var(--text-subtle);
+  user-select: none;
+  opacity: 0.5;
+  padding: 0 0.4rem;
 }
 
 .cert-vows {
@@ -286,25 +389,26 @@ html, body {
   font-style: italic;
   line-height: 1.6;
   color: var(--text-secondary);
+  text-align: center;
 }
 
 /* ==========================================================================
-   HANDWRITTEN SIGNATURES SECTION
+   SIGNATURES & EMBOSSED SEAL
    ========================================================================== */
 .cert-signatures {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   width: 100%;
-  max-width: 720px;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
-  gap: 2rem;
+  max-width: 760px;
+  margin-top: 0.5rem;
+  margin-bottom: 1.2rem;
+  gap: 1.5rem;
 }
 
 .signature-block {
   flex: 1;
-  max-width: 260px;
+  max-width: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -313,7 +417,7 @@ html, body {
 
 .signature-pad-container {
   width: 100%;
-  height: 80px;
+  height: 85px;
   position: relative;
   display: flex;
   align-items: center;
@@ -337,11 +441,11 @@ html, body {
   border: none;
   font-family: var(--font-sans);
   font-size: 0.68rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--text-subtle);
   cursor: pointer;
   opacity: 0.35;
-  transition: opacity 0.15s ease, color 0.15s ease;
+  transition: all 0.15s ease;
   padding: 2px 4px;
 }
 
@@ -378,30 +482,22 @@ html, body {
   color: var(--text-primary);
 }
 
-/* Center Monogram */
-.cert-center-monogram {
+/* Center Embossed Seal */
+.cert-center-seal {
+  width: 82px;
+  height: 82px;
+  color: var(--seal-color);
+  opacity: 0.85;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
   user-select: none;
+  margin-bottom: 2px;
 }
 
-.monogram-symbol {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  letter-spacing: 0.25em;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.monogram-sub {
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  letter-spacing: 0.15em;
-  color: var(--text-subtle);
-  margin-top: 2px;
+.seal-svg {
+  width: 100%;
+  height: 100%;
 }
 
 /* ==========================================================================
@@ -412,16 +508,15 @@ html, body {
 }
 
 .footer-note {
-  font-family: var(--font-serif);
-  font-size: 0.88rem;
-  font-style: italic;
-  letter-spacing: 0.18em;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
   color: var(--text-subtle);
   text-transform: uppercase;
 }
 
 /* ==========================================================================
-   NOTIFICATION TOAST
+   TOAST
    ========================================================================== */
 .toast {
   position: fixed;
@@ -432,7 +527,7 @@ html, body {
   color: #ffffff;
   font-family: var(--font-sans);
   font-size: 0.82rem;
-  padding: 0.55rem 1.1rem;
+  padding: 0.55rem 1.15rem;
   border-radius: 4px;
   opacity: 0;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -482,14 +577,13 @@ html, body {
   }
 
   .couple-ampersand {
-    font-size: 1.6rem;
     margin: -0.2rem 0;
   }
 
   .cert-signatures {
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    gap: 1.8rem;
   }
 
   .signature-block {
@@ -497,8 +591,8 @@ html, body {
     width: 240px;
   }
 
-  .cert-center-monogram {
-    margin: -0.5rem 0;
+  .cert-center-seal {
+    margin: -0.25rem 0;
   }
 }
 
@@ -552,7 +646,7 @@ html, body {
   .cert-frame-inner {
     height: 100% !important;
     justify-content: space-between !important;
-    padding: 36px 44px !important;
+    padding: 32px 42px !important;
   }
 
   [contenteditable="true"] {

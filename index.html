@@ -4,84 +4,150 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wedding Certificate — Adam &amp; Maria</title>
-  <meta name="description" content="A minimal, personal keepsake wedding certificate for Adam and Maria.">
+  <meta name="description" content="A minimal keepsake wedding certificate for Adam and Maria with live real-time sync.">
 
-  <!-- Google Fonts: Cormorant Garamond & Inter -->
+  <!-- Google Fonts: Cormorant Garamond, Inter, Pinyon Script -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&family=Pinyon+Script&display=swap" rel="stylesheet">
 
-  <!-- html2canvas for PNG export -->
+  <!-- Supabase JS Client for Live Realtime Sync -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- html2canvas for High-Res Image Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Minimal Floating Action Bar -->
+  <!-- Minimal Floating Header / Realtime Status Bar -->
   <header class="action-bar">
     <div class="action-bar-inner">
-      <span class="action-hint">Tap any text to edit • Sign with your hand below</span>
+      <div class="status-wrap">
+        <span class="status-indicator-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Connecting live sync...</span>
+      </div>
+
       <div class="action-buttons">
-        <button type="button" id="btn-share" class="btn" title="Copy shareable link">Share</button>
+        <button type="button" id="btn-share" class="btn" title="Copy share link">Share Link</button>
         <button type="button" id="btn-print" class="btn" title="Print or save as PDF">Print / PDF</button>
-        <button type="button" id="btn-download" class="btn btn-primary" title="Download image">Download</button>
+        <button type="button" id="btn-download" class="btn btn-primary" title="Download image">Save Image</button>
       </div>
     </div>
   </header>
 
-  <!-- Certificate Canvas Area -->
+  <!-- Certificate Container -->
   <main class="page-container">
     <div class="certificate-paper" id="certificate">
       
-      <!-- Border Frames -->
+      <!-- Outer Border -->
       <div class="cert-frame-outer">
+        
+        <!-- Corner Botanical Accents -->
+        <div class="corner-flourish corner-tl">
+          <svg viewBox="0 0 80 80" class="flourish-svg">
+            <path d="M2,2 L35,2 M2,2 L2,35" stroke="currentColor" stroke-width="1" fill="none"/>
+            <path d="M7,7 C7,25 25,7 45,7 C20,15 15,20 7,45" stroke="currentColor" stroke-width="0.75" fill="none"/>
+            <circle cx="14" cy="14" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div class="corner-flourish corner-tr">
+          <svg viewBox="0 0 80 80" class="flourish-svg">
+            <path d="M78,2 L45,2 M78,2 L78,35" stroke="currentColor" stroke-width="1" fill="none"/>
+            <path d="M73,7 C73,25 55,7 35,7 C60,15 65,20 73,45" stroke="currentColor" stroke-width="0.75" fill="none"/>
+            <circle cx="66" cy="14" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div class="corner-flourish corner-bl">
+          <svg viewBox="0 0 80 80" class="flourish-svg">
+            <path d="M2,78 L35,78 M2,78 L2,45" stroke="currentColor" stroke-width="1" fill="none"/>
+            <path d="M7,73 C7,55 25,73 45,73 C20,65 15,60 7,35" stroke="currentColor" stroke-width="0.75" fill="none"/>
+            <circle cx="14" cy="66" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div class="corner-flourish corner-br">
+          <svg viewBox="0 0 80 80" class="flourish-svg">
+            <path d="M78,78 L45,78 M78,78 L78,45" stroke="currentColor" stroke-width="1" fill="none"/>
+            <path d="M73,73 C73,55 55,73 35,73 C60,65 65,60 73,35" stroke="currentColor" stroke-width="0.75" fill="none"/>
+            <circle cx="66" cy="66" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <!-- Inner Border -->
         <div class="cert-frame-inner">
+
+          <!-- Top Botanical Crest -->
+          <div class="cert-crest">
+            <svg viewBox="0 0 120 32" class="crest-svg">
+              <!-- Laurel Wreath & Center Interlocking Ring Silhouette -->
+              <path d="M10,16 C30,4 45,6 55,16 C45,26 30,28 10,16 Z" fill="none" stroke="currentColor" stroke-width="0.75" opacity="0.65"/>
+              <path d="M110,16 C90,4 75,6 65,16 C75,26 90,28 110,16 Z" fill="none" stroke="currentColor" stroke-width="0.75" opacity="0.65"/>
+              <circle cx="56" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="64" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="60" cy="10" r="1" fill="currentColor"/>
+            </svg>
+          </div>
 
           <!-- Header / Title -->
           <div class="cert-header">
-            <p class="cert-kicker" contenteditable="true" spellcheck="false">Certificate of Marriage</p>
-            <div class="cert-divider"></div>
-            <p class="cert-lead" contenteditable="true" spellcheck="false">This certifies that</p>
+            <h1 class="cert-title" contenteditable="true" spellcheck="false" data-field="cert-title">Certificate of Marriage</h1>
+            <p class="cert-subtitle" contenteditable="true" spellcheck="false" data-field="cert-subtitle">OUR LITTLE FOREVER • PLAYFUL SOULMATE KEEPSAKE</p>
+            <div class="cert-flourish-line">
+              <svg viewBox="0 0 160 12" class="flourish-line-svg">
+                <line x1="0" y1="6" x2="65" y2="6" stroke="currentColor" stroke-width="0.75" opacity="0.5"/>
+                <circle cx="80" cy="6" r="2.5" fill="none" stroke="currentColor" stroke-width="0.75"/>
+                <line x1="95" y1="6" x2="160" y2="6" stroke="currentColor" stroke-width="0.75" opacity="0.5"/>
+              </svg>
+            </div>
+            <p class="cert-lead" contenteditable="true" spellcheck="false" data-field="cert-lead">This certifies that</p>
           </div>
 
           <!-- The Couple -->
           <div class="cert-couple">
             <div class="couple-person">
-              <span class="person-name" id="name-p1" contenteditable="true" spellcheck="false">Adam</span>
-              <span class="person-handle" id="handle-p1" contenteditable="true" spellcheck="false">nova.af</span>
+              <span class="person-name" id="name-p1" contenteditable="true" spellcheck="false" data-field="name-p1">Adam</span>
+              <span class="person-handle" id="handle-p1" contenteditable="true" spellcheck="false" data-field="handle-p1">nova.af</span>
             </div>
 
-            <div class="couple-ampersand">&amp;</div>
+            <div class="couple-ampersand">
+              <span class="ampersand-char">&amp;</span>
+            </div>
 
             <div class="couple-person">
-              <span class="person-name" id="name-p2" contenteditable="true" spellcheck="false">Maria</span>
-              <span class="person-handle" id="handle-p2" contenteditable="true" spellcheck="false">llittleaangel</span>
+              <span class="person-name" id="name-p2" contenteditable="true" spellcheck="false" data-field="name-p2">Maria</span>
+              <span class="person-handle" id="handle-p2" contenteditable="true" spellcheck="false" data-field="handle-p2">llittleaangel</span>
             </div>
           </div>
 
           <!-- Declaration Body -->
           <div class="cert-body">
-            <p class="cert-text" contenteditable="true" spellcheck="false">
-              were united in marriage on <span class="editable-inline" id="cert-date" contenteditable="true" spellcheck="false">October 30, 2026</span>
+            <p class="cert-statement" contenteditable="true" spellcheck="false" data-field="cert-statement">
+              were happily united in digital matrimony on <span class="editable-inline" id="cert-date" contenteditable="true" spellcheck="false" data-field="cert-date">October 30, 2026</span>
             </p>
-            <p class="cert-location" contenteditable="true" spellcheck="false">
-              celebrated together in love, late-night calls, and quiet companionship
+            <p class="cert-location" contenteditable="true" spellcheck="false" data-field="cert-location">
+              celebrated in love, late-night voice calls, shared playlists, and endless mutual pings
             </p>
+
+            <!-- Vows Box -->
             <div class="cert-vows-wrapper">
-              <p class="cert-vows" id="cert-vows" contenteditable="true" spellcheck="false">
-                "I promise to be by your side through every quiet evening and late-night conversation, to listen, to care, and to choose you every single day."
+              <span class="vow-quotemark">“</span>
+              <p class="cert-vows" id="cert-vows" contenteditable="true" spellcheck="false" data-field="cert-vows">
+                I promise to be by your side through every quiet evening and late-night conversation, to listen, to care, and to choose you every single day.
               </p>
+              <span class="vow-quotemark">”</span>
             </div>
           </div>
 
-          <!-- Signatures Section -->
+          <!-- Signatures & Embossed Seal Section -->
           <div class="cert-signatures">
             
             <!-- Spouse 1 Signature -->
             <div class="signature-block">
-              <div class="signature-pad-container">
-                <canvas id="canvas-sig-1" class="signature-canvas" width="280" height="90"></canvas>
+              <div class="signature-pad-container" id="sig-container-1">
+                <canvas id="canvas-sig-1" class="signature-canvas" width="280" height="85"></canvas>
                 <button type="button" class="btn-clear-sig" id="btn-clear-sig1" title="Clear signature">clear</button>
               </div>
               <div class="signature-line"></div>
@@ -89,16 +155,35 @@
               <p class="signature-name" id="label-name-p1">Adam</p>
             </div>
 
-            <!-- Subtle Center Date / Monogram -->
-            <div class="cert-center-monogram">
-              <span class="monogram-symbol">A &amp; M</span>
-              <span class="monogram-sub" id="monogram-date">2026</span>
+            <!-- Center Blind-Embossed Style Stationery Seal -->
+            <div class="cert-center-seal" title="Stationery Seal">
+              <svg viewBox="0 0 100 100" class="seal-svg">
+                <!-- Outer delicate ring -->
+                <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="0.75" stroke-dasharray="2,2"/>
+                <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" stroke-width="1"/>
+                <path id="seal-curve-top" d="M18,50 A32,32 0 0,1 82,50" fill="none"/>
+                <path id="seal-curve-bot" d="M82,52 A32,32 0 0,1 18,52" fill="none"/>
+                <text font-size="6" letter-spacing="1.8" fill="currentColor" opacity="0.7">
+                  <textPath href="#seal-curve-top" startOffset="50%" text-anchor="middle">
+                    TWO HEARTS • ONE STORY
+                  </textPath>
+                </text>
+                <text font-size="5.5" letter-spacing="1.5" fill="currentColor" opacity="0.7">
+                  <textPath href="#seal-curve-bot" startOffset="50%" text-anchor="middle">
+                    OUR LITTLE FOREVER
+                  </textPath>
+                </text>
+                <!-- Center Monogram -->
+                <circle cx="50" cy="50" r="16" fill="none" stroke="currentColor" stroke-width="0.75"/>
+                <text x="50" y="53" font-size="8.5" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" text-anchor="middle" fill="currentColor" id="seal-monogram-text">A &amp; M</text>
+                <text x="50" y="61" font-size="4.5" font-family="'Inter', sans-serif" letter-spacing="1" text-anchor="middle" fill="currentColor" opacity="0.6" id="seal-year-text">2026</text>
+              </svg>
             </div>
 
             <!-- Spouse 2 Signature -->
             <div class="signature-block">
-              <div class="signature-pad-container">
-                <canvas id="canvas-sig-2" class="signature-canvas" width="280" height="90"></canvas>
+              <div class="signature-pad-container" id="sig-container-2">
+                <canvas id="canvas-sig-2" class="signature-canvas" width="280" height="85"></canvas>
                 <button type="button" class="btn-clear-sig" id="btn-clear-sig2" title="Clear signature">clear</button>
               </div>
               <div class="signature-line"></div>
@@ -108,15 +193,15 @@
 
           </div>
 
-          <!-- Minimal Footer Note -->
+          <!-- Fine Print Footer -->
           <div class="cert-footer">
-            <p class="footer-note" contenteditable="true" spellcheck="false">Our Little Forever</p>
+            <p class="footer-note">A playful digital keepsake celebrated with love • Kept close in our hearts forever</p>
           </div>
 
-        </div>
-      </div>
+        </div><!-- /cert-frame-inner -->
+      </div><!-- /cert-frame-outer -->
 
-    </div>
+    </div><!-- /certificate-paper -->
   </main>
 
   <!-- Notification Toast -->
