@@ -3,625 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Our Little Forever 💍 Discord Wedding Certificate Generator</title>
-  <meta name="description" content="Create, personalize, sign, and download an elegant keepsake Discord wedding certificate. Fully client-side, private, and ready to share.">
-  <meta name="theme-color" content="#c5a059">
+  <title>Wedding Certificate — Adam &amp; Maria</title>
+  <meta name="description" content="A minimal, personal keepsake wedding certificate for Adam and Maria.">
 
-  <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💍</text></svg>">
-
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Cormorant Garamond & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Pinyon+Script&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
 
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <!-- html2canvas for High-Res PNG Export -->
+  <!-- html2canvas for PNG export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- canvas-confetti for celebration -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="theme-dark-ui">
+<body>
 
-  <!-- Top Navigation / Header -->
-  <header class="app-header">
-    <div class="header-container">
-      <div class="brand">
-        <span class="brand-icon">💍</span>
-        <div class="brand-text">
-          <h1>Our Little Forever</h1>
-          <span class="brand-tag">Discord Keepsake Wedding Generator</span>
-        </div>
-      </div>
-      
-      <div class="header-actions">
-        <button id="btn-load-preset" class="btn btn-secondary btn-sm" title="Fill sample romantic details">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <span>Sample Vows</span>
-        </button>
-        <button id="btn-copy-share" class="btn btn-secondary btn-sm" title="Copy shareable link with these details">
-          <i class="fa-solid fa-link"></i>
-          <span>Share Link</span>
-        </button>
-        <button id="btn-top-download" class="btn btn-gold btn-sm">
-          <i class="fa-solid fa-download"></i>
-          <span>Download PNG</span>
-        </button>
+  <!-- Minimal Floating Action Bar -->
+  <header class="action-bar">
+    <div class="action-bar-inner">
+      <span class="action-hint">Tap any text to edit • Sign with your hand below</span>
+      <div class="action-buttons">
+        <button type="button" id="btn-share" class="btn" title="Copy shareable link">Share</button>
+        <button type="button" id="btn-print" class="btn" title="Print or save as PDF">Print / PDF</button>
+        <button type="button" id="btn-download" class="btn btn-primary" title="Download image">Download</button>
       </div>
     </div>
   </header>
 
-  <!-- Mobile View Toggle Tabs -->
-  <div class="mobile-tabs-container">
-    <div class="mobile-tabs">
-      <button class="mobile-tab-btn active" data-tab="editor">
-        <i class="fa-solid fa-pen-nib"></i> Edit &amp; Sign
-      </button>
-      <button class="mobile-tab-btn" data-tab="preview">
-        <i class="fa-solid fa-scroll"></i> Certificate Preview
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Application Wrapper -->
-  <main class="app-main">
-    
-    <!-- LEFT PANEL: Customization & Signature Studio -->
-    <aside class="editor-panel" id="editor-panel">
-      <div class="editor-scroll">
-        
-        <!-- Notice Banner -->
-        <div class="notice-banner">
-          <i class="fa-solid fa-shield-heart"></i>
-          <div>
-            <strong>100% Client-Side &amp; Private:</strong> All details &amp; signatures exist strictly in your browser session. No accounts, backend or database.
-          </div>
-        </div>
-
-        <!-- Section 1: The Happy Couple -->
-        <section class="form-section">
-          <div class="section-header">
-            <span class="section-num">01</span>
-            <div>
-              <h2>The Happy Couple</h2>
-              <p>Enter your names and Discord handles</p>
-            </div>
-          </div>
-
-          <div class="grid-2-col">
-            <div class="input-group">
-              <label for="input-partner1-name">
-                <i class="fa-solid fa-user"></i> Partner 1 Name
-              </label>
-              <input type="text" id="input-partner1-name" value="Adam" placeholder="e.g. Adam" maxlength="32">
-            </div>
-            <div class="input-group">
-              <label for="input-partner1-tag">
-                <i class="fa-brands fa-discord"></i> Discord Handle
-              </label>
-              <input type="text" id="input-partner1-tag" value="@adam" placeholder="e.g. @adam" maxlength="32">
-            </div>
-          </div>
-
-          <div class="grid-2-col">
-            <div class="input-group">
-              <label for="input-partner2-name">
-                <i class="fa-solid fa-user"></i> Partner 2 Name
-              </label>
-              <input type="text" id="input-partner2-name" value="Angel" placeholder="e.g. Angel / Maria" maxlength="32">
-            </div>
-            <div class="input-group">
-              <label for="input-partner2-tag">
-                <i class="fa-brands fa-discord"></i> Discord Handle
-              </label>
-              <input type="text" id="input-partner2-tag" value="@angel" placeholder="e.g. @angel" maxlength="32">
-            </div>
-          </div>
-        </section>
-
-        <!-- Section 2: Ceremony & Ceremony Details -->
-        <section class="form-section">
-          <div class="section-header">
-            <span class="section-num">02</span>
-            <div>
-              <h2>Ceremony &amp; Location</h2>
-              <p>Where and when did you say "I Do"?</p>
-            </div>
-          </div>
-
-          <div class="grid-2-col">
-            <div class="input-group">
-              <label for="input-ceremony-date">
-                <i class="fa-regular fa-calendar-heart"></i> Ceremony Date
-              </label>
-              <input type="text" id="input-ceremony-date" value="October 30, 2026" placeholder="e.g. October 30, 2026">
-            </div>
-            <div class="input-group">
-              <label for="input-server-name">
-                <i class="fa-solid fa-church"></i> Discord Server / Location
-              </label>
-              <input type="text" id="input-server-name" value="The Sanctuary 💒 • #vows-channel" placeholder="e.g. Sweethearts Guild • VC-1">
-            </div>
-          </div>
-
-          <div class="grid-2-col">
-            <div class="input-group">
-              <label for="input-officiant">
-                <i class="fa-solid fa-crown"></i> Officiated By
-              </label>
-              <input type="text" id="input-officiant" value="Clyde the Bot &amp; Cherished Server Friends" placeholder="e.g. Clyde the Bot">
-            </div>
-            <div class="input-group">
-              <label for="input-cert-title">
-                <i class="fa-solid fa-ribbon"></i> Certificate Title
-              </label>
-              <input type="text" id="input-cert-title" value="Certificate of Discord Holy Matrimony" placeholder="Certificate Title">
-            </div>
-          </div>
-
-          <div class="input-group">
-            <div class="label-with-action">
-              <label for="input-vows">
-                <i class="fa-solid fa-quote-left"></i> Personal Vows &amp; Keepsake Message
-              </label>
-              <div class="vow-templates-dropdown">
-                <button type="button" class="btn-text-link" id="btn-vows-menu">
-                  <i class="fa-solid fa-feather"></i> Preset Vows <i class="fa-solid fa-chevron-down"></i>
-                </button>
-                <div class="dropdown-content" id="vows-dropdown">
-                  <button type="button" class="vow-preset-item" data-preset="romantic">Classic Sweet Romance</button>
-                  <button type="button" class="vow-preset-item" data-preset="discord">Discord Gamer &amp; VC Soulmates</button>
-                  <button type="button" class="vow-preset-item" data-preset="forever">Our Little Forever</button>
-                  <button type="button" class="vow-preset-item" data-preset="humorous">Nitro &amp; Ping Promises</button>
-                </div>
-              </div>
-            </div>
-            <textarea id="input-vows" rows="3" maxlength="320" placeholder="Write your heartfelt vows or message here...">We solemnly promise to stay on late-night calls until one of us falls asleep, never steal each other's Discord Nitro gifts, share our best playlists, and stand together through every server raid and quiet evening. You will always be my favourite notification.</textarea>
-            <div class="char-count"><span id="vow-chars">0</span>/320 characters</div>
-          </div>
-        </section>
-
-        <!-- Section 3: Certificate Aesthetics & Theme -->
-        <section class="form-section">
-          <div class="section-header">
-            <span class="section-num">03</span>
-            <div>
-              <h2>Keepsake Theme</h2>
-              <p>Choose your certificate palette &amp; style</p>
-            </div>
-          </div>
-
-          <div class="theme-selector-grid">
-            <label class="theme-card active" data-theme="champagne">
-              <input type="radio" name="cert-theme" value="champagne" checked>
-              <div class="theme-swatch swatch-champagne"></div>
-              <div class="theme-meta">
-                <strong>Royal Champagne</strong>
-                <span>Ivory, Gold &amp; Warm Sand</span>
-              </div>
-            </label>
-
-            <label class="theme-card" data-theme="blush">
-              <input type="radio" name="cert-theme" value="blush">
-              <div class="theme-swatch swatch-blush"></div>
-              <div class="theme-meta">
-                <strong>Blush Botanical</strong>
-                <span>Rose Petal &amp; Champagne Gold</span>
-              </div>
-            </label>
-
-            <label class="theme-card" data-theme="midnight">
-              <input type="radio" name="cert-theme" value="midnight">
-              <div class="theme-swatch swatch-midnight"></div>
-              <div class="theme-meta">
-                <strong>Midnight Starlight</strong>
-                <span>Obsidian Indigo &amp; Star Gold</span>
-              </div>
-            </label>
-          </div>
-        </section>
-
-        <!-- Section 4: Signature Studio -->
-        <section class="form-section">
-          <div class="section-header">
-            <span class="section-num">04</span>
-            <div>
-              <h2>Signature Studio</h2>
-              <p>Sign with your mouse/touchscreen or select a cursive font</p>
-            </div>
-          </div>
-
-          <!-- Partner 1 Signature Box -->
-          <div class="signature-box" id="sig-box-1">
-            <div class="sig-box-header">
-              <span class="sig-title"><strong id="sig1-title-label">Partner 1 (Adam)</strong></span>
-              <div class="sig-mode-toggle">
-                <button type="button" class="sig-mode-btn active" data-partner="1" data-mode="draw">
-                  <i class="fa-solid fa-paintbrush"></i> Draw
-                </button>
-                <button type="button" class="sig-mode-btn" data-partner="1" data-mode="type">
-                  <i class="fa-solid fa-keyboard"></i> Type
-                </button>
-              </div>
-            </div>
-
-            <!-- Draw Mode -->
-            <div class="sig-canvas-wrapper" id="sig1-draw-container">
-              <canvas id="sig1-canvas" width="400" height="130"></canvas>
-              <div class="sig-canvas-controls">
-                <span class="canvas-hint"><i class="fa-solid fa-hand-pointer"></i> Draw signature above</span>
-                <button type="button" class="btn-clear-sig" id="btn-clear-sig1">
-                  <i class="fa-solid fa-rotate-left"></i> Clear
-                </button>
-              </div>
-            </div>
-
-            <!-- Type Mode -->
-            <div class="sig-type-wrapper hidden" id="sig1-type-container">
-              <input type="text" id="sig1-text-input" value="Adam" placeholder="Type name here...">
-              <div class="sig-font-picker">
-                <label>Calligraphy Style:</label>
-                <select id="sig1-font-select">
-                  <option value="font-pinyon">Pinyon Script (Classic)</option>
-                  <option value="font-great-vibes" selected>Great Vibes (Elegant)</option>
-                  <option value="font-alex-brush">Alex Brush (Flowing)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Partner 2 Signature Box -->
-          <div class="signature-box" id="sig-box-2">
-            <div class="sig-box-header">
-              <span class="sig-title"><strong id="sig2-title-label">Partner 2 (Angel)</strong></span>
-              <div class="sig-mode-toggle">
-                <button type="button" class="sig-mode-btn active" data-partner="2" data-mode="draw">
-                  <i class="fa-solid fa-paintbrush"></i> Draw
-                </button>
-                <button type="button" class="sig-mode-btn" data-partner="2" data-mode="type">
-                  <i class="fa-solid fa-keyboard"></i> Type
-                </button>
-              </div>
-            </div>
-
-            <!-- Draw Mode -->
-            <div class="sig-canvas-wrapper" id="sig2-draw-container">
-              <canvas id="sig2-canvas" width="400" height="130"></canvas>
-              <div class="sig-canvas-controls">
-                <span class="canvas-hint"><i class="fa-solid fa-hand-pointer"></i> Draw signature above</span>
-                <button type="button" class="btn-clear-sig" id="btn-clear-sig2">
-                  <i class="fa-solid fa-rotate-left"></i> Clear
-                </button>
-              </div>
-            </div>
-
-            <!-- Type Mode -->
-            <div class="sig-type-wrapper hidden" id="sig2-type-container">
-              <input type="text" id="sig2-text-input" value="Angel" placeholder="Type name here...">
-              <div class="sig-font-picker">
-                <label>Calligraphy Style:</label>
-                <select id="sig2-font-select">
-                  <option value="font-pinyon">Pinyon Script (Classic)</option>
-                  <option value="font-great-vibes">Great Vibes (Elegant)</option>
-                  <option value="font-alex-brush" selected>Alex Brush (Flowing)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Action Buttons Footer -->
-        <div class="panel-actions">
-          <button id="btn-main-download" class="btn btn-gold btn-block">
-            <i class="fa-solid fa-file-arrow-down"></i>
-            <span>Download Keepsake PNG</span>
-          </button>
-          <div class="secondary-btn-row">
-            <button id="btn-main-print" class="btn btn-secondary flex-1">
-              <i class="fa-solid fa-print"></i> Print / Save PDF
-            </button>
-            <button id="btn-celebrate" class="btn btn-secondary flex-1">
-              <i class="fa-solid fa-heart-pulse"></i> Celebrate 🎉
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </aside>
-
-    <!-- RIGHT PANEL: Live Certificate Preview -->
-    <section class="preview-panel" id="preview-panel">
+  <!-- Certificate Canvas Area -->
+  <main class="page-container">
+    <div class="certificate-paper" id="certificate">
       
-      <!-- Preview Control Toolbar -->
-      <div class="preview-toolbar">
-        <div class="toolbar-left">
-          <span class="status-indicator">
-            <span class="status-dot"></span> Live Rendering
-          </span>
-          <span class="preview-resolution-badge">300 DPI Export Ready</span>
-        </div>
-        <div class="toolbar-right">
-          <button class="tool-btn" id="btn-zoom-out" title="Zoom Out">
-            <i class="fa-solid fa-magnifying-glass-minus"></i>
-          </button>
-          <span class="zoom-level" id="zoom-level-text">100%</span>
-          <button class="tool-btn" id="btn-zoom-in" title="Zoom In">
-            <i class="fa-solid fa-magnifying-glass-plus"></i>
-          </button>
-          <button class="tool-btn" id="btn-zoom-reset" title="Fit to Screen">
-            <i class="fa-solid fa-expand"></i>
-          </button>
-        </div>
-      </div>
+      <!-- Border Frames -->
+      <div class="cert-frame-outer">
+        <div class="cert-frame-inner">
 
-      <!-- Preview Canvas Viewport -->
-      <div class="certificate-viewport" id="certificate-viewport">
-        
-        <!-- THE ACTUAL CERTIFICATE (Captured for Print and PNG) -->
-        <div class="certificate-container theme-champagne" id="certificate">
-          
-          <!-- Decorative Background Grain / Gradient Layers -->
-          <div class="cert-texture-overlay"></div>
-          
-          <!-- Outer Ornate Frame -->
-          <div class="cert-outer-border">
+          <!-- Header / Title -->
+          <div class="cert-header">
+            <p class="cert-kicker" contenteditable="true" spellcheck="false">Certificate of Marriage</p>
+            <div class="cert-divider"></div>
+            <p class="cert-lead" contenteditable="true" spellcheck="false">This certifies that</p>
+          </div>
+
+          <!-- The Couple -->
+          <div class="cert-couple">
+            <div class="couple-person">
+              <span class="person-name" id="name-p1" contenteditable="true" spellcheck="false">Adam</span>
+              <span class="person-handle" id="handle-p1" contenteditable="true" spellcheck="false">nova.af</span>
+            </div>
+
+            <div class="couple-ampersand">&amp;</div>
+
+            <div class="couple-person">
+              <span class="person-name" id="name-p2" contenteditable="true" spellcheck="false">Maria</span>
+              <span class="person-handle" id="handle-p2" contenteditable="true" spellcheck="false">llittleaangel</span>
+            </div>
+          </div>
+
+          <!-- Declaration Body -->
+          <div class="cert-body">
+            <p class="cert-text" contenteditable="true" spellcheck="false">
+              were united in marriage on <span class="editable-inline" id="cert-date" contenteditable="true" spellcheck="false">October 30, 2026</span>
+            </p>
+            <p class="cert-location" contenteditable="true" spellcheck="false">
+              celebrated together in love, late-night calls, and quiet companionship
+            </p>
+            <div class="cert-vows-wrapper">
+              <p class="cert-vows" id="cert-vows" contenteditable="true" spellcheck="false">
+                "I promise to be by your side through every quiet evening and late-night conversation, to listen, to care, and to choose you every single day."
+              </p>
+            </div>
+          </div>
+
+          <!-- Signatures Section -->
+          <div class="cert-signatures">
             
-            <!-- Inset Gold Foil Lines -->
-            <div class="cert-inner-border">
-              
-              <!-- Intricate Vector SVG Corner Filigrees -->
-              <!-- Top-Left Corner -->
-              <div class="corner-filigree corner-tl">
-                <svg viewBox="0 0 100 100" class="filigree-svg">
-                  <path d="M5,5 Q5,50 35,50 Q15,40 15,15 Q40,15 50,35 Q50,5 5,5 Z" fill="currentColor" opacity="0.85"/>
-                  <path d="M8,8 L8,65 Q8,80 25,80 Q25,25 80,25 Q80,8 65,8 Z" fill="none" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="15" cy="15" r="4" fill="currentColor"/>
-                  <path d="M25,25 C35,15 45,30 55,20 C65,10 75,25 85,15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M25,25 C15,35 30,45 20,55 C10,65 25,75 15,85" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
+            <!-- Spouse 1 Signature -->
+            <div class="signature-block">
+              <div class="signature-pad-container">
+                <canvas id="canvas-sig-1" class="signature-canvas" width="280" height="90"></canvas>
+                <button type="button" class="btn-clear-sig" id="btn-clear-sig1" title="Clear signature">clear</button>
               </div>
+              <div class="signature-line"></div>
+              <p class="signature-label">Spouse Signature</p>
+              <p class="signature-name" id="label-name-p1">Adam</p>
+            </div>
 
-              <!-- Top-Right Corner -->
-              <div class="corner-filigree corner-tr">
-                <svg viewBox="0 0 100 100" class="filigree-svg">
-                  <path d="M95,5 Q95,50 65,50 Q85,40 85,15 Q60,15 50,35 Q50,5 95,5 Z" fill="currentColor" opacity="0.85"/>
-                  <path d="M92,8 L92,65 Q92,80 75,80 Q75,25 20,25 Q20,8 35,8 Z" fill="none" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="85" cy="15" r="4" fill="currentColor"/>
-                  <path d="M75,25 C65,15 55,30 45,20 C35,10 25,25 15,15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M75,25 C85,35 70,45 80,55 C90,65 75,75 85,85" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
+            <!-- Subtle Center Date / Monogram -->
+            <div class="cert-center-monogram">
+              <span class="monogram-symbol">A &amp; M</span>
+              <span class="monogram-sub" id="monogram-date">2026</span>
+            </div>
+
+            <!-- Spouse 2 Signature -->
+            <div class="signature-block">
+              <div class="signature-pad-container">
+                <canvas id="canvas-sig-2" class="signature-canvas" width="280" height="90"></canvas>
+                <button type="button" class="btn-clear-sig" id="btn-clear-sig2" title="Clear signature">clear</button>
               </div>
+              <div class="signature-line"></div>
+              <p class="signature-label">Spouse Signature</p>
+              <p class="signature-name" id="label-name-p2">Maria</p>
+            </div>
 
-              <!-- Bottom-Left Corner -->
-              <div class="corner-filigree corner-bl">
-                <svg viewBox="0 0 100 100" class="filigree-svg">
-                  <path d="M5,95 Q5,50 35,50 Q15,60 15,85 Q40,85 50,65 Q50,95 5,95 Z" fill="currentColor" opacity="0.85"/>
-                  <path d="M8,92 L8,35 Q8,20 25,20 Q25,75 80,75 Q80,92 65,92 Z" fill="none" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="15" cy="85" r="4" fill="currentColor"/>
-                  <path d="M25,75 C35,85 45,70 55,80 C65,90 75,75 85,85" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M25,75 C15,65 30,55 20,45 C10,35 25,25 15,15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+          </div>
 
-              <!-- Bottom-Right Corner -->
-              <div class="corner-filigree corner-br">
-                <svg viewBox="0 0 100 100" class="filigree-svg">
-                  <path d="M95,95 Q95,50 65,50 Q85,60 85,85 Q60,85 50,65 Q50,95 95,95 Z" fill="currentColor" opacity="0.85"/>
-                  <path d="M92,92 L92,35 Q92,20 75,20 Q75,75 20,75 Q20,92 35,92 Z" fill="none" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="85" cy="85" r="4" fill="currentColor"/>
-                  <path d="M75,75 C65,85 55,70 45,80 C35,90 25,75 15,85" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M75,75 C85,65 70,55 80,45 C90,35 75,25 85,15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+          <!-- Minimal Footer Note -->
+          <div class="cert-footer">
+            <p class="footer-note" contenteditable="true" spellcheck="false">Our Little Forever</p>
+          </div>
 
-              <!-- Certificate Inner Content Area -->
-              <div class="cert-content">
-                
-                <!-- Top Emblem / Crest -->
-                <div class="cert-crest">
-                  <div class="crest-wings-left">
-                    <svg viewBox="0 0 60 20" class="crest-leaf-svg">
-                      <path d="M60,10 Q35,0 10,10 Q35,20 60,10 Z M45,5 Q30,-2 15,5 M45,15 Q30,22 15,15" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
-                  </div>
-                  <div class="crest-icon-wrap">
-                    <svg viewBox="0 0 50 50" class="rings-svg">
-                      <!-- Two Interlocking Wedding Rings -->
-                      <circle cx="21" cy="25" r="14" fill="none" stroke="url(#goldGrad)" stroke-width="4.5"/>
-                      <circle cx="29" cy="25" r="14" fill="none" stroke="url(#goldGrad)" stroke-width="4.5"/>
-                      <!-- Sparkling Gem on Top -->
-                      <polygon points="21,7 24,12 18,12" fill="#ffd700"/>
-                      <defs>
-                        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stop-color="#dfba73" />
-                          <stop offset="50%" stop-color="#c5a059" />
-                          <stop offset="100%" stop-color="#8c6b2d" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  <div class="crest-wings-right">
-                    <svg viewBox="0 0 60 20" class="crest-leaf-svg mirror">
-                      <path d="M60,10 Q35,0 10,10 Q35,20 60,10 Z M45,5 Q30,-2 15,5 M45,15 Q30,22 15,15" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
-                  </div>
-                </div>
-
-                <!-- Keepsake Subtitle -->
-                <div class="cert-sub-header">
-                  <span class="sub-header-rule"></span>
-                  <span class="sub-header-text">OUR LITTLE FOREVER • PLAYFUL SOULMATE KEEPSAKE</span>
-                  <span class="sub-header-rule"></span>
-                </div>
-
-                <!-- Main Certificate Title -->
-                <h1 class="cert-main-title" id="cert-display-title">
-                  Certificate of Discord Holy Matrimony
-                </h1>
-
-                <!-- Intro Declaration -->
-                <p class="cert-declaration">
-                  This solemn and joyful keepsake certifies before all mutual servers and digital stars that
-                </p>
-
-                <!-- Couple Presentation Section -->
-                <div class="cert-couple-section">
-                  <!-- Partner 1 -->
-                  <div class="partner-card">
-                    <span class="partner-name" id="cert-p1-name">Adam</span>
-                    <span class="partner-tag" id="cert-p1-tag"><i class="fa-brands fa-discord"></i> @adam</span>
-                  </div>
-
-                  <!-- Interlocking Heart / Ampersand Flourish -->
-                  <div class="cert-union-symbol">
-                    <svg viewBox="0 0 50 40" class="union-flourish">
-                      <path d="M12,20 C6,12 14,3 25,12 C36,3 44,12 38,20 C30,30 25,36 25,36 C25,36 20,30 12,20 Z" fill="none" stroke="currentColor" stroke-width="2"/>
-                      <circle cx="25" cy="18" r="3" fill="currentColor"/>
-                    </svg>
-                    <span class="union-and">&amp;</span>
-                  </div>
-
-                  <!-- Partner 2 -->
-                  <div class="partner-card">
-                    <span class="partner-name" id="cert-p2-name">Angel</span>
-                    <span class="partner-tag" id="cert-p2-tag"><i class="fa-brands fa-discord"></i> @angel</span>
-                  </div>
-                </div>
-
-                <!-- Union Statement -->
-                <p class="cert-solemn-text">
-                  Have been playfully united in everlasting digital bond, promising mutual ping privileges, shared playlists, voice call companionship, and endless inside jokes.
-                </p>
-
-                <!-- Personal Vows Block -->
-                <div class="cert-vows-container">
-                  <span class="vow-quote-mark left">“</span>
-                  <p class="cert-vows-text" id="cert-display-vows">
-                    We solemnly promise to stay on late-night calls until one of us falls asleep, never steal each other's Discord Nitro gifts, share our best playlists, and stand together through every server raid and quiet evening. You will always be my favourite notification.
-                  </p>
-                  <span class="vow-quote-mark right">”</span>
-                </div>
-
-                <!-- Ceremony Metadata -->
-                <div class="cert-meta-bar">
-                  <div class="meta-item">
-                    <span class="meta-label">CEREMONY DATE</span>
-                    <span class="meta-val" id="cert-display-date">October 30, 2026</span>
-                  </div>
-                  <div class="meta-sep">•</div>
-                  <div class="meta-item">
-                    <span class="meta-label">LOCATION</span>
-                    <span class="meta-val" id="cert-display-server">The Sanctuary 💒 • #vows-channel</span>
-                  </div>
-                  <div class="meta-sep">•</div>
-                  <div class="meta-item">
-                    <span class="meta-label">OFFICIATED BY</span>
-                    <span class="meta-val" id="cert-display-officiant">Clyde the Bot &amp; Friends</span>
-                  </div>
-                </div>
-
-                <!-- Signatures & Golden Wax Seal Section -->
-                <div class="cert-signatures-section">
-                  
-                  <!-- Left: Partner 1 Signature -->
-                  <div class="cert-signature-col">
-                    <div class="signature-display-box" id="cert-sig1-display">
-                      <!-- Rendered image or text inserted via JS -->
-                      <span class="typed-signature-preview font-great-vibes" id="cert-sig1-typed">Adam</span>
-                      <img id="cert-sig1-img" class="drawn-signature-preview hidden" alt="Signature 1">
-                    </div>
-                    <div class="sig-line"></div>
-                    <span class="sig-signer-role">Spouse &amp; Discord Partner</span>
-                    <span class="sig-signer-name" id="cert-sig1-signer-name">Adam</span>
-                  </div>
-
-                  <!-- Center: Ornate Gold Wax Seal -->
-                  <div class="cert-wax-seal">
-                    <div class="wax-seal-outer">
-                      <div class="wax-seal-ribbon ribbon-left"></div>
-                      <div class="wax-seal-ribbon ribbon-right"></div>
-                      <div class="wax-seal-circle">
-                        <svg viewBox="0 0 100 100" class="seal-svg">
-                          <!-- Outer serrated edge -->
-                          <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3,2"/>
-                          <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" stroke-width="1.2"/>
-                          <path id="seal-text-path-top" d="M20,50 A30,30 0 0,1 80,50" fill="none"/>
-                          <path id="seal-text-path-bot" d="M80,52 A30,30 0 0,1 20,52" fill="none"/>
-                          <text font-size="8" letter-spacing="2" fill="currentColor">
-                            <textPath href="#seal-text-path-top" startOffset="50%" text-anchor="middle">
-                              ETERNAL BOND
-                            </textPath>
-                          </text>
-                          <text font-size="6.5" letter-spacing="1.5" fill="currentColor">
-                            <textPath href="#seal-text-path-bot" startOffset="50%" text-anchor="middle">
-                              OUR LITTLE FOREVER
-                            </textPath>
-                          </text>
-                          <!-- Center Emblem -->
-                          <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="1"/>
-                          <path d="M43,50 C40,46 44,41 50,45 C56,41 60,46 57,50 C54,54 50,58 50,58 C50,58 46,54 43,50 Z" fill="currentColor"/>
-                          <circle cx="50" cy="50" r="2.5" fill="#fff" opacity="0.8"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <span class="seal-registration-hash" id="cert-seal-hash">SEAL #OLF-2026-ENGAGED</span>
-                  </div>
-
-                  <!-- Right: Partner 2 Signature -->
-                  <div class="cert-signature-col">
-                    <div class="signature-display-box" id="cert-sig2-display">
-                      <!-- Rendered image or text inserted via JS -->
-                      <span class="typed-signature-preview font-alex-brush" id="cert-sig2-typed">Angel</span>
-                      <img id="cert-sig2-img" class="drawn-signature-preview hidden" alt="Signature 2">
-                    </div>
-                    <div class="sig-line"></div>
-                    <span class="sig-signer-role">Spouse &amp; Discord Partner</span>
-                    <span class="sig-signer-name" id="cert-sig2-signer-name">Angel</span>
-                  </div>
-
-                </div>
-
-                <!-- Footer Fine Print -->
-                <div class="cert-footer-fineprint">
-                  <span>A playful digital keepsake celebration • Not a legal government document • Kept close in our hearts forever</span>
-                </div>
-
-              </div><!-- /cert-content -->
-            </div><!-- /cert-inner-border -->
-          </div><!-- /cert-outer-border -->
-        </div><!-- /certificate -->
-
-      </div><!-- /certificate-viewport -->
-
-      <!-- Bottom Floating Action Bar for Quick Access -->
-      <div class="preview-footer-bar">
-        <button id="btn-floating-download" class="btn btn-gold">
-          <i class="fa-solid fa-cloud-arrow-down"></i>
-          <span>Save Certificate as PNG</span>
-        </button>
-        <button id="btn-floating-print" class="btn btn-secondary">
-          <i class="fa-solid fa-print"></i>
-          <span>Print / PDF</span>
-        </button>
-        <button id="btn-copy-discord" class="btn btn-secondary" title="Copy Discord announcement format">
-          <i class="fa-brands fa-discord"></i>
-          <span>Discord Post</span>
-        </button>
+        </div>
       </div>
 
-    </section>
-
+    </div>
   </main>
 
-  <!-- Share Toast Notification -->
-  <div class="toast-notification" id="toast-notify">
-    <i class="fa-solid fa-circle-check"></i>
-    <span id="toast-message">Shareable link copied to clipboard!</span>
-  </div>
+  <!-- Notification Toast -->
+  <div class="toast" id="toast">Link copied to clipboard</div>
 
   <script src="app.js"></script>
 </body>
