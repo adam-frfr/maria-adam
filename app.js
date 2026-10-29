@@ -31,6 +31,7 @@
 
   const statusDot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
+  const onlineCountEl = document.getElementById('online-count');
 
   const btnShare = document.getElementById('btn-share');
   const btnPrint = document.getElementById('btn-print');
@@ -107,37 +108,60 @@
         }
       );
 
-      // Presence Tracking (shows when both are connected)
-      realtimeChannel.on('presence', { event: 'sync' }, () => {
+      // 3. Live Presence Tracking (counts active people on the site in real time)
+      function updatePresenceDisplay() {
+        if (!realtimeChannel) return;
         const presenceState = realtimeChannel.presenceState();
-        const userCount = Object.keys(presenceState).length;
-
-        statusDot.classList.add('online');
-        if (userCount >= 2) {
-          statusText.textContent = 'Both online • Live';
-        } else {
-          statusText.textContent = 'Connected • Realtime sync';
+        let totalUsers = 0;
+        for (const key in presenceState) {
+          totalUsers += presenceState[key].length;
         }
+        const activeCount = Math.max(1, totalUsers);
+
+        if (onlineCountEl) onlineCountEl.textContent = activeCount;
+        statusDot.classList.add('online');
+
+        if (activeCount === 1) {
+          statusText.textContent = 'online (you)';
+        } else if (activeCount === 2) {
+          statusText.textContent = 'online • Both connected';
+        } else {
+          statusText.textContent = 'people online';
+        }
+      }
+
+      realtimeChannel.on('presence', { event: 'sync' }, () => {
+        updatePresenceDisplay();
+      });
+
+      realtimeChannel.on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        updatePresenceDisplay();
+        showToast('Partner connected! Live sync active');
+      });
+
+      realtimeChannel.on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        updatePresenceDisplay();
       });
 
       // Subscribe & Track
       realtimeChannel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           statusDot.classList.add('online');
-          statusText.textContent = 'Connected • Realtime sync';
           await realtimeChannel.track({
             online_at: new Date().toISOString(),
             user: clientSessionId
           });
+          updatePresenceDisplay();
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           statusDot.classList.remove('online');
-          statusText.textContent = 'Offline (local mode)';
+          if (onlineCountEl) onlineCountEl.textContent = '1';
+          statusText.textContent = 'local mode';
         }
       });
 
     } catch (err) {
       console.warn('Supabase setup note:', err);
-      statusText.textContent = 'Local mode';
+      statusText.textContent = 'local mode';
     }
   }
 

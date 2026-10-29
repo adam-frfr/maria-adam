@@ -67,6 +67,10 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
   min-width: 0;
 }
 
@@ -90,15 +94,24 @@ html, body {
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-.status-text {
+.presence-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-family: var(--font-sans);
   font-size: 0.74rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.01em;
+  color: var(--text-secondary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.presence-badge strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.presence-badge span {
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .action-buttons {

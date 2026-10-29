@@ -23,9 +23,12 @@
   <!-- Minimal Floating Header / Realtime Status Bar -->
   <header class="action-bar">
     <div class="action-bar-inner">
-      <div class="status-wrap">
+      <div class="status-wrap" id="presence-badge" title="Live active users on this certificate">
         <span class="status-indicator-dot" id="status-dot"></span>
-        <span class="status-text" id="status-text">Connecting...</span>
+        <span class="presence-badge">
+          <strong id="online-count">1</strong>
+          <span id="status-text">online</span>
+        </span>
       </div>
 
       <div class="action-buttons">
