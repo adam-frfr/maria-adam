@@ -1,6 +1,12 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 12 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
