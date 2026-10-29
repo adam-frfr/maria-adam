@@ -1,6 +1,6 @@
 /**
  * Minimal Wedding Certificate — Adam & Maria
- * Powered by Supabase Realtime for instant live sync across devices
+ * Powered by Supabase Database & Realtime for permanent storage and live sync across devices
  */
 
 (function () {
@@ -9,6 +9,7 @@
   // --- SUPABASE CONFIGURATION ---
   const SUPABASE_URL = 'https://yebgxfcezwhdnosxzcot.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllYmd4ZmNlendoZG5vc3h6Y290Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMDA1NzUsImV4cCI6MjEwODg3NjU3NX0.zO8aKK79qr52oCx_rIiZaUeSO-3G28g-MMkv9on5uys';
+  const CERT_ID = 'adam_maria';
 
   // Unique session identifier for presence
   const clientSessionId = 'user_' + Math.random().toString(36).substring(2, 9);
@@ -58,56 +59,55 @@
     setupSignaturePads();
     setupInlineSync();
     setupActions();
-    initSupabaseRealtime();
+    initSupabase();
   }
 
-  // --- SUPABASE REALTIME SYNC ---
-  function initSupabaseRealtime() {
+  // --- SUPABASE CLIENT & REALTIME ---
+  async function initSupabase() {
     if (typeof window.supabase === 'undefined') {
-      setTimeout(initSupabaseRealtime, 350);
+      setTimeout(initSupabase, 350);
       return;
     }
 
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      realtimeChannel = supabaseClient.channel('adam_maria_wedding_cert', {
+      // 1. Fetch saved certificate data from Supabase DB on startup
+      await fetchFromDatabase();
+
+      // 2. Set up Realtime Channel (both postgres_changes & instant broadcast)
+      realtimeChannel = supabaseClient.channel('adam_maria_wedding_sync', {
         config: {
           broadcast: { self: false },
           presence: { key: clientSessionId }
         }
       });
 
-      // 1. Live Signature sync
+      // Peer-to-peer instant broadcast for zero-latency drawing
       realtimeChannel.on('broadcast', { event: 'sig_update' }, (payload) => {
         if (!payload || !payload.payload) return;
         const data = payload.payload;
         applyRemoteSignature(data.partner, data.dataUrl, data.clear);
       });
 
-      // 2. Live Text sync
       realtimeChannel.on('broadcast', { event: 'text_sync' }, (payload) => {
         if (!payload || !payload.payload) return;
         const data = payload.payload;
         applyRemoteText(data.field, data.text);
       });
 
-      // 3. State handshake
-      realtimeChannel.on('broadcast', { event: 'request_state' }, () => {
-        const snapshot = getCurrentState();
-        realtimeChannel.send({
-          type: 'broadcast',
-          event: 'state_snapshot',
-          payload: snapshot
-        });
-      });
+      // Database real-time change listener (fires when PostgreSQL table updates)
+      realtimeChannel.on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'certificates', filter: `id=eq.${CERT_ID}` },
+        (payload) => {
+          if (payload && payload.new) {
+            applyDbRecord(payload.new);
+          }
+        }
+      );
 
-      realtimeChannel.on('broadcast', { event: 'state_snapshot' }, (payload) => {
-        if (!payload || !payload.payload) return;
-        applyStateSnapshot(payload.payload);
-      });
-
-      // 4. Presence status
+      // Presence Tracking (shows when both are connected)
       realtimeChannel.on('presence', { event: 'sync' }, () => {
         const presenceState = realtimeChannel.presenceState();
         const userCount = Object.keys(presenceState).length;
@@ -116,7 +116,7 @@
         if (userCount >= 2) {
           statusText.textContent = 'Both online • Live';
         } else {
-          statusText.textContent = 'Live sync ready';
+          statusText.textContent = 'Connected • Realtime sync';
         }
       });
 
@@ -124,16 +124,10 @@
       realtimeChannel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           statusDot.classList.add('online');
-          statusText.textContent = 'Live sync connected';
+          statusText.textContent = 'Connected • Realtime sync';
           await realtimeChannel.track({
             online_at: new Date().toISOString(),
             user: clientSessionId
-          });
-
-          realtimeChannel.send({
-            type: 'broadcast',
-            event: 'request_state',
-            payload: { from: clientSessionId }
           });
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           statusDot.classList.remove('online');
@@ -142,29 +136,103 @@
       });
 
     } catch (err) {
-      console.warn('Realtime sync fallback:', err);
+      console.warn('Supabase setup note:', err);
       statusText.textContent = 'Local mode';
     }
   }
 
+  // --- DATABASE OPERATIONS ---
+  async function fetchFromDatabase() {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('certificates')
+        .select('*')
+        .eq('id', CERT_ID)
+        .maybeSingle();
+
+      if (error) {
+        // Table not created yet or query error
+        console.info('Supabase database table check:', error.message);
+        return;
+      }
+
+      if (data) {
+        applyDbRecord(data);
+        statusDot.classList.add('online');
+        statusText.textContent = 'Database synced';
+      }
+    } catch (e) {
+      console.warn('Could not query database table:', e);
+    }
+  }
+
+  function applyDbRecord(row) {
+    if (!row) return;
+    if (row.p1_name && document.activeElement !== nameP1) nameP1.textContent = row.p1_name;
+    if (row.p1_handle && document.activeElement !== handleP1) handleP1.textContent = row.p1_handle;
+    if (row.p2_name && document.activeElement !== nameP2) nameP2.textContent = row.p2_name;
+    if (row.p2_handle && document.activeElement !== handleP2) handleP2.textContent = row.p2_handle;
+    if (row.ceremony_date && document.activeElement !== certDate) certDate.textContent = row.ceremony_date;
+    if (row.vows && document.activeElement !== certVows) certVows.textContent = row.vows;
+
+    if (row.sig1) applyRemoteSignature(1, row.sig1, false);
+    if (row.sig2) applyRemoteSignature(2, row.sig2, false);
+
+    syncDependentFields();
+  }
+
+  // Debounced database saving
+  const saveToDatabaseDebounced = debounce(async function () {
+    if (!supabaseClient) return;
+    try {
+      const payload = {
+        id: CERT_ID,
+        p1_name: nameP1.textContent.trim(),
+        p1_handle: handleP1.textContent.trim(),
+        p2_name: nameP2.textContent.trim(),
+        p2_handle: handleP2.textContent.trim(),
+        ceremony_date: certDate.textContent.trim(),
+        vows: certVows.textContent.trim(),
+        sig1: sigPads[1].hasSignature ? sigPads[1].el.toDataURL() : null,
+        sig2: sigPads[2].hasSignature ? sigPads[2].el.toDataURL() : null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabaseClient
+        .from('certificates')
+        .upsert(payload, { onConflict: 'id' });
+
+      if (!error) {
+        statusDot.classList.add('online');
+      }
+    } catch (e) {
+      console.warn('Supabase DB save note:', e);
+    }
+  }, 600);
+
   function broadcastTextChange(fieldId, text) {
-    if (!realtimeChannel) return;
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'text_sync',
-      payload: { field: fieldId, text: text }
-    });
+    if (realtimeChannel) {
+      realtimeChannel.send({
+        type: 'broadcast',
+        event: 'text_sync',
+        payload: { field: fieldId, text: text }
+      });
+    }
     saveLocalState();
+    saveToDatabaseDebounced();
   }
 
   function broadcastSignature(partnerId, dataUrl, clear) {
-    if (!realtimeChannel) return;
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'sig_update',
-      payload: { partner: partnerId, dataUrl: dataUrl, clear: clear }
-    });
+    if (realtimeChannel) {
+      realtimeChannel.send({
+        type: 'broadcast',
+        event: 'sig_update',
+        payload: { partner: partnerId, dataUrl: dataUrl, clear: clear }
+      });
+    }
     saveLocalState();
+    saveToDatabaseDebounced();
   }
 
   function applyRemoteSignature(partnerId, dataUrl, clear) {
@@ -201,34 +269,6 @@
     }
   }
 
-  function getCurrentState() {
-    return {
-      p1Name: nameP1.textContent.trim(),
-      p1Handle: handleP1.textContent.trim(),
-      p2Name: nameP2.textContent.trim(),
-      p2Handle: handleP2.textContent.trim(),
-      date: certDate.textContent.trim(),
-      vows: certVows.textContent.trim(),
-      sig1: sigPads[1].hasSignature ? sigPads[1].el.toDataURL() : null,
-      sig2: sigPads[2].hasSignature ? sigPads[2].el.toDataURL() : null
-    };
-  }
-
-  function applyStateSnapshot(snapshot) {
-    if (!snapshot) return;
-    if (snapshot.p1Name && document.activeElement !== nameP1) nameP1.textContent = snapshot.p1Name;
-    if (snapshot.p1Handle && document.activeElement !== handleP1) handleP1.textContent = snapshot.p1Handle;
-    if (snapshot.p2Name && document.activeElement !== nameP2) nameP2.textContent = snapshot.p2Name;
-    if (snapshot.p2Handle && document.activeElement !== handleP2) handleP2.textContent = snapshot.p2Handle;
-    if (snapshot.date && document.activeElement !== certDate) certDate.textContent = snapshot.date;
-    if (snapshot.vows && document.activeElement !== certVows) certVows.textContent = snapshot.vows;
-
-    if (snapshot.sig1 && !sigPads[1].hasSignature) applyRemoteSignature(1, snapshot.sig1, false);
-    if (snapshot.sig2 && !sigPads[2].hasSignature) applyRemoteSignature(2, snapshot.sig2, false);
-
-    syncDependentFields();
-  }
-
   // --- SIGNATURE CANVAS ENGINE (MOBILE TOUCH + MOUSE) ---
   function setupSignaturePads() {
     [1, 2].forEach(id => {
@@ -243,7 +283,6 @@
         const width = rect.width || canvas.parentElement.clientWidth || 140;
         const height = rect.height || canvas.parentElement.clientHeight || 75;
 
-        // Preserve strokes if resizing
         const temp = document.createElement('canvas');
         temp.width = canvas.width;
         temp.height = canvas.height;
@@ -265,7 +304,6 @@
         }
       }
 
-      // Initial DPR sizing
       configureCanvasDPR();
       setTimeout(configureCanvasDPR, 100);
       window.addEventListener('resize', debounce(configureCanvasDPR, 200));
@@ -317,7 +355,6 @@
           return;
         }
 
-        // Quadratic Bezier smoothing for natural fountain-pen curve
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
 
@@ -347,18 +384,15 @@
         broadcastSignature(id, dataUrl, false);
       }
 
-      // Touch events (passive: false is essential to prevent scrolling while signing on mobile)
       canvas.addEventListener('touchstart', start, { passive: false });
       canvas.addEventListener('touchmove', move, { passive: false });
       window.addEventListener('touchend', end);
       window.addEventListener('touchcancel', end);
 
-      // Mouse events
       canvas.addEventListener('mousedown', start);
       canvas.addEventListener('mousemove', move);
       window.addEventListener('mouseup', end);
 
-      // Clear Button
       pad.clearBtn.addEventListener('click', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         pad.hasSignature = false;
