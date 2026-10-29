@@ -268,11 +268,13 @@
   const btnModalClose = document.getElementById('btn-modal-close');
   const btnModalCancel = document.getElementById('btn-modal-cancel');
   const btnModalClear = document.getElementById('btn-modal-clear');
+  const btnModalUndo = document.getElementById('btn-modal-undo');
   const btnModalDone = document.getElementById('btn-modal-done');
 
   let activePartnerForModal = 1;
   let modalCtx = null;
   let modalHasDrawn = false;
+  let modalStrokeHistory = [];
 
   function applyRemoteSignature(partnerId, dataUrl, clear) {
     const pad = sigPads[partnerId];
@@ -429,7 +431,7 @@
     };
   }
 
-  function bindSmoothDrawing(canvas, ctx, onStrokeComplete) {
+  function bindSmoothDrawing(canvas, ctx, onStrokeComplete, beforeStrokeStart) {
     let isDrawing = false;
     let lastPoint = null;
     let lastMidPoint = null;
@@ -437,6 +439,7 @@
     function start(e) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
+      if (beforeStrokeStart) beforeStrokeStart();
       isDrawing = true;
       const p = getEventCoords(e, canvas);
       lastPoint = p;
@@ -544,11 +547,36 @@
   function setupModalEngine() {
     modalCtx = modalCanvas.getContext('2d');
 
-    bindSmoothDrawing(modalCanvas, modalCtx, () => {
-      modalHasDrawn = true;
-    });
+    bindSmoothDrawing(
+      modalCanvas,
+      modalCtx,
+      () => {
+        modalHasDrawn = true;
+      },
+      () => {
+        try {
+          if (modalStrokeHistory.length > 25) modalStrokeHistory.shift();
+          modalStrokeHistory.push(modalCtx.getImageData(0, 0, modalCanvas.width, modalCanvas.height));
+        } catch (e) {}
+      }
+    );
+
+    if (btnModalUndo) {
+      btnModalUndo.addEventListener('click', () => {
+        if (modalStrokeHistory.length > 0) {
+          const prev = modalStrokeHistory.pop();
+          modalCtx.putImageData(prev, 0, 0);
+          const bbox = getCanvasBoundingBox(modalCanvas);
+          modalHasDrawn = bbox !== null;
+        } else {
+          modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+          modalHasDrawn = false;
+        }
+      });
+    }
 
     btnModalClear.addEventListener('click', () => {
+      modalStrokeHistory = [];
       modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
       modalHasDrawn = false;
     });
@@ -593,6 +621,7 @@
     document.body.style.overflow = 'hidden';
     sigModal.classList.add('open');
     sigModal.setAttribute('aria-hidden', 'false');
+    modalStrokeHistory = [];
 
     // Sizing on open (use requestAnimationFrame to get true rendered dimensions)
     requestAnimationFrame(() => {

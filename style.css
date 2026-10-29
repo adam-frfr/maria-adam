@@ -721,6 +721,12 @@ html, body {
   margin-top: 0.25rem;
 }
 
+.modal-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .modal-actions-right {
   display: flex;
   align-items: center;
