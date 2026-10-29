@@ -259,13 +259,28 @@
     saveToDatabaseDebounced();
   }
 
+  // DOM Elements for Signature Modal
+  const sigModal = document.getElementById('sig-modal');
+  const modalCanvas = document.getElementById('modal-canvas');
+  const modalTitle = document.getElementById('modal-title');
+  const btnModalClose = document.getElementById('btn-modal-close');
+  const btnModalCancel = document.getElementById('btn-modal-cancel');
+  const btnModalClear = document.getElementById('btn-modal-clear');
+  const btnModalDone = document.getElementById('btn-modal-done');
+
+  let activePartnerForModal = 1;
+  let modalCtx = null;
+  let modalHasDrawn = false;
+
   function applyRemoteSignature(partnerId, dataUrl, clear) {
     const pad = sigPads[partnerId];
+    const hint = document.getElementById(`sig-hint-${partnerId}`);
     if (!pad) return;
 
     if (clear) {
       pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
       pad.hasSignature = false;
+      if (hint) hint.classList.remove('hidden');
       showToast(`Signature cleared`);
       return;
     }
@@ -279,7 +294,9 @@
         const height = rect.height || pad.el.parentElement.clientHeight || 75;
         pad.ctx.drawImage(img, 0, 0, width, height);
         pad.hasSignature = true;
-        showToast(`Partner signed!`);
+        if (hint) hint.classList.add('hidden');
+        const signerName = partnerId === 1 ? (nameP1.textContent.trim() || 'Partner 1') : (nameP2.textContent.trim() || 'Partner 2');
+        showToast(`${signerName} signed!`);
       };
       img.src = dataUrl;
     }
@@ -293,7 +310,83 @@
     }
   }
 
-  // --- SIGNATURE CANVAS ENGINE (MOBILE TOUCH + MOUSE) ---
+  // --- SMOOTH O(1) DRAWING ENGINE (ZERO LAG) ---
+  function getEventCoords(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: (clientX !== undefined ? clientX : 0) - rect.left,
+      y: (clientY !== undefined ? clientY : 0) - rect.top
+    };
+  }
+
+  function bindSmoothDrawing(canvas, ctx, onStrokeComplete) {
+    let isDrawing = false;
+    let lastPoint = null;
+    let lastMidPoint = null;
+
+    function start(e) {
+      if (e.cancelable) e.preventDefault();
+      isDrawing = true;
+      const p = getEventCoords(e, canvas);
+      lastPoint = p;
+      lastMidPoint = p;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fill();
+    }
+
+    function move(e) {
+      if (!isDrawing) return;
+      if (e.cancelable) e.preventDefault();
+
+      const cur = getEventCoords(e, canvas);
+      const mid = {
+        x: (lastPoint.x + cur.x) / 2,
+        y: (lastPoint.y + cur.y) / 2
+      };
+
+      // O(1) incremental curve: instantly renders single segment without replaying history!
+      ctx.beginPath();
+      ctx.moveTo(lastMidPoint.x, lastMidPoint.y);
+      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, mid.x, mid.y);
+      ctx.stroke();
+
+      lastPoint = cur;
+      lastMidPoint = mid;
+    }
+
+    function end() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      lastPoint = null;
+      lastMidPoint = null;
+      if (onStrokeComplete) onStrokeComplete();
+    }
+
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('touchend', end);
+    window.addEventListener('touchcancel', end);
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+  }
+
+  // --- SIGNATURE CANVAS SETUP & MODAL TRIGGER ---
   function setupSignaturePads() {
     [1, 2].forEach(id => {
       const pad = sigPads[id];
@@ -302,7 +395,7 @@
       pad.ctx = ctx;
 
       function configureCanvasDPR() {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.max(window.devicePixelRatio || 1, 2);
         const rect = canvas.getBoundingClientRect();
         const width = rect.width || canvas.parentElement.clientWidth || 140;
         const height = rect.height || canvas.parentElement.clientHeight || 75;
@@ -320,7 +413,7 @@
         ctx.scale(dpr, dpr);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 1.9;
+        ctx.lineWidth = 2.2;
         ctx.strokeStyle = '#171615';
 
         if (temp.width > 0 && temp.height > 0) {
@@ -329,100 +422,152 @@
       }
 
       configureCanvasDPR();
-      setTimeout(configureCanvasDPR, 100);
+      setTimeout(configureCanvasDPR, 120);
       window.addEventListener('resize', debounce(configureCanvasDPR, 200));
 
-      let isDrawing = false;
-      let points = [];
-
-      function getCoords(e) {
-        const rect = canvas.getBoundingClientRect();
-        let clientX = e.clientX;
-        let clientY = e.clientY;
-        if (e.touches && e.touches.length > 0) {
-          clientX = e.touches[0].clientX;
-          clientY = e.touches[0].clientY;
-        } else if (e.changedTouches && e.changedTouches.length > 0) {
-          clientX = e.changedTouches[0].clientX;
-          clientY = e.changedTouches[0].clientY;
-        }
-        return {
-          x: (clientX !== undefined ? clientX : 0) - rect.left,
-          y: (clientY !== undefined ? clientY : 0) - rect.top
-        };
-      }
-
-      function start(e) {
-        if (e.cancelable) e.preventDefault();
-        isDrawing = true;
-        const coord = getCoords(e);
-        points = [coord];
-
-        ctx.beginPath();
-        ctx.arc(coord.x, coord.y, 0.9, 0, Math.PI * 2);
-        ctx.fillStyle = '#171615';
-        ctx.fill();
-      }
-
-      function move(e) {
-        if (!isDrawing) return;
-        if (e.cancelable) e.preventDefault();
-
-        const coord = getCoords(e);
-        points.push(coord);
-
-        if (points.length < 3) {
-          const b = points[0];
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, ctx.lineWidth / 2, 0, Math.PI * 2, true);
-          ctx.fill();
-          return;
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-
-        for (let i = 1; i < points.length - 2; i++) {
-          const c = (points[i].x + points[i + 1].x) / 2;
-          const d = (points[i].y + points[i + 1].y) / 2;
-          ctx.quadraticCurveTo(points[i].x, points[i].y, c, d);
-        }
-
-        const last = points.length - 2;
-        ctx.quadraticCurveTo(
-          points[last].x,
-          points[last].y,
-          points[last + 1].x,
-          points[last + 1].y
-        );
-        ctx.stroke();
-      }
-
-      function end() {
-        if (!isDrawing) return;
-        isDrawing = false;
-        points = [];
+      // Bind O(1) smooth drawing directly on inline canvas
+      bindSmoothDrawing(canvas, ctx, () => {
         pad.hasSignature = true;
+        const hint = document.getElementById(`sig-hint-${id}`);
+        if (hint) hint.classList.add('hidden');
+        broadcastSignature(id, canvas.toDataURL(), false);
+      });
 
-        const dataUrl = canvas.toDataURL();
-        broadcastSignature(id, dataUrl, false);
+      // Clicking / tapping opens the full-screen spacious signature modal
+      const container = document.getElementById(`sig-container-${id}`);
+      if (container) {
+        container.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-clear-sig')) return;
+          openSignatureModal(id);
+        });
       }
 
-      canvas.addEventListener('touchstart', start, { passive: false });
-      canvas.addEventListener('touchmove', move, { passive: false });
-      window.addEventListener('touchend', end);
-      window.addEventListener('touchcancel', end);
-
-      canvas.addEventListener('mousedown', start);
-      canvas.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', end);
-
-      pad.clearBtn.addEventListener('click', () => {
+      // Inline clear button
+      pad.clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         pad.hasSignature = false;
+        const hint = document.getElementById(`sig-hint-${id}`);
+        if (hint) hint.classList.remove('hidden');
         broadcastSignature(id, null, true);
       });
     });
+
+    setupModalEngine();
+  }
+
+  // --- SPACIOUS SIGNATURE MODAL ENGINE ---
+  function setupModalEngine() {
+    modalCtx = modalCanvas.getContext('2d');
+
+    function sizeModalCanvas() {
+      const dpr = Math.max(window.devicePixelRatio || 1, 2);
+      const rect = modalCanvas.getBoundingClientRect();
+      const width = rect.width || 460;
+      const height = rect.height || 240;
+
+      const temp = document.createElement('canvas');
+      temp.width = modalCanvas.width;
+      temp.height = modalCanvas.height;
+      if (modalCanvas.width > 0 && modalCanvas.height > 0) {
+        temp.getContext('2d').drawImage(modalCanvas, 0, 0);
+      }
+
+      modalCanvas.width = width * dpr;
+      modalCanvas.height = height * dpr;
+
+      modalCtx.scale(dpr, dpr);
+      modalCtx.lineCap = 'round';
+      modalCtx.lineJoin = 'round';
+      modalCtx.lineWidth = 2.6;
+      modalCtx.strokeStyle = '#171615';
+
+      if (temp.width > 0 && temp.height > 0) {
+        modalCtx.drawImage(temp, 0, 0, width, height);
+      }
+    }
+
+    bindSmoothDrawing(modalCanvas, modalCtx, () => {
+      modalHasDrawn = true;
+    });
+
+    btnModalClear.addEventListener('click', () => {
+      modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+      modalHasDrawn = false;
+    });
+
+    btnModalClose.addEventListener('click', closeSignatureModal);
+    btnModalCancel.addEventListener('click', closeSignatureModal);
+    document.getElementById('sig-modal-backdrop').addEventListener('click', closeSignatureModal);
+
+    btnModalDone.addEventListener('click', () => {
+      if (modalHasDrawn) {
+        const id = activePartnerForModal;
+        const pad = sigPads[id];
+        const dataUrl = modalCanvas.toDataURL('image/png');
+
+        // Draw onto certificate line
+        const img = new Image();
+        img.onload = () => {
+          pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
+          const rect = pad.el.getBoundingClientRect();
+          const w = rect.width || pad.el.parentElement.clientWidth || 140;
+          const h = rect.height || pad.el.parentElement.clientHeight || 75;
+          pad.ctx.drawImage(img, 0, 0, w, h);
+          pad.hasSignature = true;
+
+          const hint = document.getElementById(`sig-hint-${id}`);
+          if (hint) hint.classList.add('hidden');
+
+          broadcastSignature(id, dataUrl, false);
+          showToast('Signature placed on certificate!');
+        };
+        img.src = dataUrl;
+      }
+      closeSignatureModal();
+    });
+  }
+
+  function openSignatureModal(partnerId) {
+    activePartnerForModal = partnerId;
+    const partnerName = partnerId === 1 ? (nameP1.textContent.trim() || 'Adam') : (nameP2.textContent.trim() || 'Maria');
+    modalTitle.textContent = `Sign for ${partnerName}`;
+
+    sigModal.classList.add('open');
+    sigModal.setAttribute('aria-hidden', 'false');
+
+    // Sizing on open
+    const dpr = Math.max(window.devicePixelRatio || 1, 2);
+    const rect = modalCanvas.getBoundingClientRect();
+    const width = rect.width || 460;
+    const height = rect.height || 240;
+
+    modalCanvas.width = width * dpr;
+    modalCanvas.height = height * dpr;
+    modalCtx.scale(dpr, dpr);
+    modalCtx.lineCap = 'round';
+    modalCtx.lineJoin = 'round';
+    modalCtx.lineWidth = 2.6;
+    modalCtx.strokeStyle = '#171615';
+    modalCtx.clearRect(0, 0, width, height);
+
+    // If signature exists, pre-load so they can edit or view
+    const pad = sigPads[partnerId];
+    if (pad && pad.hasSignature) {
+      const img = new Image();
+      img.onload = () => {
+        modalCtx.drawImage(img, 0, 0, width, height);
+        modalHasDrawn = true;
+      };
+      img.src = pad.el.toDataURL();
+    } else {
+      modalHasDrawn = false;
+    }
+  }
+
+  function closeSignatureModal() {
+    sigModal.classList.remove('open');
+    sigModal.setAttribute('aria-hidden', 'true');
   }
 
   // --- INLINE EDITING SYNC ---
@@ -542,7 +687,7 @@
       offscreen.style.position = 'fixed';
       offscreen.style.left = '-9999px';
       offscreen.style.top = '0';
-      offscreen.style.width = '1040px';
+      offscreen.style.width = '1060px';
       offscreen.style.zIndex = '-9999';
       offscreen.style.background = '#ffffff';
 
@@ -551,6 +696,7 @@
         const certClone = cert.cloneNode(true);
         certClone.classList.add('force-landscape-export');
         certClone.querySelectorAll('.btn-clear-sig').forEach(b => b.remove());
+        certClone.querySelectorAll('.sig-tap-hint').forEach(h => h.remove());
 
         offscreen.appendChild(certClone);
         document.body.appendChild(offscreen);
@@ -561,9 +707,10 @@
           const liveCanvas = document.getElementById(`canvas-sig-${id}`);
           const cloneCanvas = certClone.querySelector(`#canvas-sig-${id}`);
           if (liveCanvas && cloneCanvas) {
-            cloneCanvas.width = 260 * dpr;
-            cloneCanvas.height = 85 * dpr;
+            cloneCanvas.width = 280 * dpr;
+            cloneCanvas.height = 90 * dpr;
             const cloneCtx = cloneCanvas.getContext('2d');
+            cloneCtx.clearRect(0, 0, cloneCanvas.width, cloneCanvas.height);
             cloneCtx.drawImage(liveCanvas, 0, 0, cloneCanvas.width, cloneCanvas.height);
           }
         });
@@ -574,7 +721,7 @@
           backgroundColor: '#fefdfb',
           useCORS: true,
           logging: false,
-          width: 1040,
+          width: 1060,
           windowWidth: 1200
         });
 
