@@ -513,14 +513,45 @@
       const cert = document.getElementById('certificate');
       btnDownload.textContent = 'Saving...';
 
-      document.querySelectorAll('.btn-clear-sig').forEach(b => b.style.display = 'none');
+      // Create an offscreen wrapper with fixed horizontal landscape dimensions
+      const offscreen = document.createElement('div');
+      offscreen.style.position = 'fixed';
+      offscreen.style.left = '-9999px';
+      offscreen.style.top = '0';
+      offscreen.style.width = '1040px';
+      offscreen.style.zIndex = '-9999';
+      offscreen.style.background = '#ffffff';
 
       try {
-        const canvas = await html2canvas(cert, {
+        // Clone certificate and apply full landscape export styling
+        const certClone = cert.cloneNode(true);
+        certClone.classList.add('force-landscape-export');
+        certClone.querySelectorAll('.btn-clear-sig').forEach(b => b.remove());
+
+        offscreen.appendChild(certClone);
+        document.body.appendChild(offscreen);
+
+        // Copy signature drawings to the clone with high-res crispness
+        const dpr = Math.max(window.devicePixelRatio || 1, 2);
+        [1, 2].forEach(id => {
+          const liveCanvas = document.getElementById(`canvas-sig-${id}`);
+          const cloneCanvas = certClone.querySelector(`#canvas-sig-${id}`);
+          if (liveCanvas && cloneCanvas) {
+            cloneCanvas.width = 260 * dpr;
+            cloneCanvas.height = 85 * dpr;
+            const cloneCtx = cloneCanvas.getContext('2d');
+            cloneCtx.drawImage(liveCanvas, 0, 0, cloneCanvas.width, cloneCanvas.height);
+          }
+        });
+
+        // Capture in true horizontal landscape orientation
+        const canvas = await html2canvas(certClone, {
           scale: 3,
           backgroundColor: '#fefdfb',
           useCORS: true,
-          logging: false
+          logging: false,
+          width: 1040,
+          windowWidth: 1200
         });
 
         const p1 = (nameP1.textContent.trim() || 'Adam').replace(/[^a-zA-Z0-9]/g, '');
@@ -532,12 +563,14 @@
         link.click();
         document.body.removeChild(link);
 
-        showToast('Certificate saved');
+        showToast('Horizontal certificate saved!');
       } catch (err) {
-        console.error(err);
+        console.error('Horizontal export error:', err);
         showToast('Could not save image. Try PDF instead.');
       } finally {
-        document.querySelectorAll('.btn-clear-sig').forEach(b => b.style.display = '');
+        if (offscreen.parentNode) {
+          offscreen.parentNode.removeChild(offscreen);
+        }
         btnDownload.textContent = 'Save';
       }
     });

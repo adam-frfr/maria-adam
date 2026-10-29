@@ -589,7 +589,8 @@ html, body {
    ========================================================================== */
 @media (min-width: 769px) {
   .certificate-paper {
-    padding: 24px;
+    padding: 26px;
+    width: 900px;
   }
 
   .cert-frame-outer {
@@ -597,7 +598,7 @@ html, body {
   }
 
   .cert-frame-inner {
-    padding: 38px 46px;
+    padding: 38px 48px;
   }
 
   .corner-flourish {
@@ -606,7 +607,7 @@ html, body {
   }
 
   .cert-couple {
-    gap: 2rem;
+    gap: 2.2rem;
   }
 
   .couple-person {
@@ -614,7 +615,7 @@ html, body {
   }
 
   .cert-signatures {
-    gap: 2rem;
+    gap: 2.2rem;
   }
 
   .top-hint-banner {
@@ -623,11 +624,124 @@ html, body {
 }
 
 /* ==========================================================================
-   PRINT / PDF EXPORT
+   TRUE HORIZONTAL / LANDSCAPE EXPORT STYLES (ALWAYS LANDSCAPE FOR DOWNLOAD)
+   ========================================================================== */
+.certificate-paper.force-landscape-export {
+  width: 1040px !important;
+  max-width: 1040px !important;
+  min-height: 700px !important;
+  height: 700px !important;
+  padding: 24px !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  background: #fefdfb !important;
+  box-shadow: none !important;
+}
+
+.force-landscape-export .cert-frame-outer {
+  padding: 12px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.force-landscape-export .cert-frame-inner {
+  padding: 36px 48px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+  justify-content: space-between !important;
+}
+
+.force-landscape-export .corner-flourish {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.force-landscape-export .cert-title {
+  font-size: 1.55rem !important;
+  letter-spacing: 0.24em !important;
+}
+
+.force-landscape-export .cert-couple {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2.5rem !important;
+  margin: 1rem 0 1.2rem 0 !important;
+}
+
+.force-landscape-export .person-name {
+  font-size: 2.85rem !important;
+}
+
+.force-landscape-export .person-handle {
+  font-size: 0.85rem !important;
+}
+
+.force-landscape-export .ampersand-char {
+  font-size: 2.2rem !important;
+}
+
+.force-landscape-export .cert-body {
+  max-width: 700px !important;
+  margin: 0 auto 1.2rem auto !important;
+}
+
+.force-landscape-export .cert-statement {
+  font-size: 1.25rem !important;
+}
+
+.force-landscape-export .cert-location {
+  font-size: 1.05rem !important;
+}
+
+.force-landscape-export .cert-vows {
+  font-size: 1.15rem !important;
+}
+
+.force-landscape-export .cert-seal-wrap {
+  margin: 0.4rem 0 0.8rem 0 !important;
+}
+
+.force-landscape-export .cert-center-seal {
+  width: 74px !important;
+  height: 74px !important;
+}
+
+.force-landscape-export .cert-signatures {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  max-width: 720px !important;
+  gap: 2.5rem !important;
+  margin-bottom: 0.6rem !important;
+}
+
+.force-landscape-export .signature-block {
+  flex: 1 !important;
+  max-width: 260px !important;
+}
+
+.force-landscape-export .signature-pad-container {
+  height: 85px !important;
+}
+
+.force-landscape-export .signature-label {
+  font-size: 0.68rem !important;
+}
+
+.force-landscape-export .signature-name {
+  font-size: 1.05rem !important;
+}
+
+/* ==========================================================================
+   PRINT / PDF EXPORT (ALWAYS HORIZONTAL LANDSCAPE)
    ========================================================================== */
 @media print {
   @page {
-    size: portrait;
+    size: landscape;
     margin: 0;
   }
 
@@ -636,6 +750,8 @@ html, body {
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -652,15 +768,41 @@ html, body {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    min-height: 100vh !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    box-sizing: border-box !important;
   }
 
   .certificate-paper {
     box-shadow: none !important;
     border-radius: 0 !important;
-    width: 100vw !important;
-    min-height: 100vh !important;
-    padding: 24px !important;
+    width: 95vw !important;
+    height: 92vh !important;
+    max-width: none !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  .cert-frame-outer {
+    height: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .cert-frame-inner {
+    height: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: space-between !important;
+    padding: 28px 40px !important;
+  }
+
+  .cert-couple {
+    flex-direction: row !important;
+    gap: 2.5rem !important;
+  }
+
+  .cert-signatures {
+    flex-direction: row !important;
+    gap: 2.5rem !important;
   }
 
   [contenteditable="true"] {
