@@ -1,6 +1,6 @@
 /* ==========================================================================
    MINIMAL ARTISAN WEDDING CERTIFICATE — ADAM & MARIA
-   Understated luxury stationery with live real-time sync
+   Mobile-First, Responsive Fine-Art Stationery
    ========================================================================== */
 
 :root {
@@ -19,7 +19,6 @@
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-script: 'Pinyon Script', cursive;
 }
 
 *, *::before, *::after {
@@ -35,10 +34,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* ==========================================================================
-   ACTION BAR & REALTIME STATUS
+   TOP ACTION BAR (MOBILE-OPTIMIZED)
    ========================================================================== */
 .action-bar {
   position: sticky;
@@ -46,26 +47,27 @@ html, body {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(245, 243, 238, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(245, 243, 238, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 0.65rem 1.5rem;
+  padding: 0.45rem 0.85rem;
 }
 
 .action-bar-inner {
-  max-width: 960px;
+  max-width: 860px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .status-wrap {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .status-indicator-dot {
@@ -73,46 +75,52 @@ html, body {
   height: 7px;
   border-radius: 50%;
   background: #f59e0b;
+  flex-shrink: 0;
   transition: all 0.3s ease;
 }
 
 .status-indicator-dot.online {
   background: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
   animation: pulseGreen 2.5s infinite ease-in-out;
 }
 
 @keyframes pulseGreen {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
 .status-text {
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .action-buttons {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .btn {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  padding: 0.42rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0.35rem 0.65rem;
   border-radius: 4px;
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-outer);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -132,6 +140,16 @@ html, body {
   color: #ffffff;
 }
 
+/* Subtle Top Hint */
+.top-hint-banner {
+  text-align: center;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
 /* ==========================================================================
    PAGE CONTAINER & PAPER
    ========================================================================== */
@@ -139,33 +157,34 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2.2rem 1.25rem 4rem 1.25rem;
+  padding: 0.75rem 0.5rem 2.5rem 0.5rem;
+  width: 100%;
 }
 
 .certificate-paper {
-  width: 940px;
+  width: 840px;
   max-width: 100%;
   background: var(--bg-paper);
   box-shadow: 
     0 1px 3px rgba(0, 0, 0, 0.03),
-    0 14px 40px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.02);
-  border-radius: 2px;
-  padding: 26px;
+    0 10px 32px rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  padding: 8px;
   position: relative;
 }
 
 /* Outer & Inner Delicate Borders */
 .cert-frame-outer {
   border: 1px solid var(--border-outer);
-  padding: 12px;
+  padding: 8px;
   position: relative;
+  background: #ffffff;
 }
 
 .corner-flourish {
   position: absolute;
-  width: 52px;
-  height: 52px;
+  width: 36px;
+  height: 36px;
   color: var(--border-outer);
   pointer-events: none;
   z-index: 2;
@@ -183,7 +202,7 @@ html, body {
 
 .cert-frame-inner {
   border: 1px solid var(--border-inner);
-  padding: 38px 48px;
+  padding: 26px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -200,25 +219,26 @@ html, body {
   cursor: text;
   transition: all 0.12s ease;
   border-radius: 2px;
-  padding: 1px 4px;
+  padding: 1px 3px;
+  word-break: break-word;
 }
 
 [contenteditable="true"]:hover {
-  background-color: rgba(0, 0, 0, 0.025);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 [contenteditable="true"]:focus {
-  background-color: rgba(0, 0, 0, 0.035);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 /* ==========================================================================
    CREST & HEADER
    ========================================================================== */
 .cert-crest {
-  width: 100px;
-  height: 28px;
-  margin-bottom: 0.6rem;
+  width: 80px;
+  height: 22px;
+  margin-bottom: 0.4rem;
   color: var(--seal-color);
   opacity: 0.85;
 }
@@ -229,38 +249,39 @@ html, body {
 }
 
 .cert-header {
-  margin-bottom: 1.8rem;
+  margin-bottom: 1.2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 .cert-title {
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 5vw, 1.55rem);
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.2em;
   color: var(--text-primary);
-  margin-bottom: 0.35rem;
-  line-height: 1.2;
+  margin-bottom: 0.25rem;
+  line-height: 1.25;
 }
 
 .cert-subtitle {
   font-family: var(--font-sans);
-  font-size: 0.62rem;
-  letter-spacing: 0.22em;
+  font-size: clamp(0.55rem, 2.3vw, 0.65rem);
+  letter-spacing: 0.2em;
   font-weight: 500;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .cert-flourish-line {
-  width: 140px;
-  height: 10px;
+  width: 110px;
+  height: 8px;
   color: var(--border-outer);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.45rem;
 }
 
 .flourish-line-svg {
@@ -270,21 +291,21 @@ html, body {
 
 .cert-lead {
   font-family: var(--font-serif);
-  font-size: 1.15rem;
+  font-size: clamp(1rem, 3.8vw, 1.15rem);
   font-style: italic;
   font-weight: 400;
   color: var(--text-muted);
 }
 
 /* ==========================================================================
-   THE COUPLE
+   THE COUPLE (ALWAYS SYMMETRICAL & SIDE-BY-SIDE)
    ========================================================================== */
 .cert-couple {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
-  gap: 2.2rem;
-  margin-bottom: 1.8rem;
+  gap: 0.5rem;
+  margin: 0.85rem 0 1.2rem 0;
   width: 100%;
 }
 
@@ -292,58 +313,66 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 220px;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .person-name {
   font-family: var(--font-serif);
-  font-size: 2.75rem;
+  font-size: clamp(1.75rem, 6.5vw, 2.7rem);
   font-weight: 400;
   font-style: italic;
   line-height: 1.1;
   color: var(--text-primary);
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .person-handle {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: clamp(0.7rem, 2.6vw, 0.82rem);
   font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.05em;
-  margin-top: 0.35rem;
+  letter-spacing: 0.04em;
+  margin-top: 0.2rem;
+  white-space: nowrap;
 }
 
 .couple-ampersand {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  padding: 0 0.15rem;
   user-select: none;
 }
 
 .ampersand-char {
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: clamp(1.35rem, 5vw, 2.1rem);
   font-style: italic;
   font-weight: 300;
   color: var(--text-subtle);
+  line-height: 1;
 }
 
 /* ==========================================================================
-   DECLARATION & VOWS
+   DECLARATION BODY & VOWS
    ========================================================================== */
 .cert-body {
-  max-width: 660px;
-  margin: 0 auto 2.2rem auto;
+  max-width: 620px;
+  margin: 0 auto 1.2rem auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
+  width: 100%;
 }
 
 .cert-statement {
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: clamp(1.05rem, 3.6vw, 1.25rem);
   font-weight: 400;
   color: var(--text-primary);
   line-height: 1.45;
@@ -356,59 +385,88 @@ html, body {
 
 .cert-location {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: clamp(0.88rem, 3vw, 1.05rem);
   font-style: italic;
   color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .cert-vows-wrapper {
-  margin-top: 0.75rem;
-  padding: 0.75rem 1.75rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.85rem;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  width: 100%;
 }
 
 .vow-quotemark {
   font-family: Georgia, serif;
-  font-size: 1.8rem;
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
   line-height: 0;
   color: var(--text-subtle);
   user-select: none;
-  opacity: 0.5;
-  padding: 0 0.4rem;
+  opacity: 0.45;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
 }
 
 .cert-vows {
   font-family: var(--font-serif);
-  font-size: 1.15rem;
+  font-size: clamp(0.95rem, 3.4vw, 1.15rem);
   font-style: italic;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--text-secondary);
   text-align: center;
 }
 
 /* ==========================================================================
-   SIGNATURES & EMBOSSED SEAL
+   CENTER EMBOSSED SEAL
+   ========================================================================== */
+.cert-seal-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.5rem 0 0.85rem 0;
+}
+
+.cert-center-seal {
+  width: clamp(62px, 16vw, 76px);
+  height: clamp(62px, 16vw, 76px);
+  color: var(--seal-color);
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.seal-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   SIGNATURES (SIDE-BY-SIDE ON BOTH MOBILE & DESKTOP)
    ========================================================================== */
 .cert-signatures {
   display: flex;
+  flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
   width: 100%;
-  max-width: 760px;
-  margin-top: 0.5rem;
-  margin-bottom: 1.2rem;
-  gap: 1.5rem;
+  max-width: 700px;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .signature-block {
   flex: 1;
-  max-width: 250px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -417,11 +475,13 @@ html, body {
 
 .signature-pad-container {
   width: 100%;
-  height: 85px;
+  height: clamp(60px, 15vw, 82px);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0.012);
+  border-radius: 2px;
 }
 
 .signature-canvas {
@@ -435,84 +495,67 @@ html, body {
 
 .btn-clear-sig {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  background: transparent;
+  top: 2px;
+  right: 2px;
+  background: rgba(255, 255, 255, 0.7);
   border: none;
   font-family: var(--font-sans);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
   color: var(--text-subtle);
   cursor: pointer;
-  opacity: 0.35;
+  padding: 1px 4px;
+  border-radius: 2px;
   transition: all 0.15s ease;
-  padding: 2px 4px;
-}
-
-.signature-pad-container:hover .btn-clear-sig {
-  opacity: 1;
-  color: var(--text-muted);
 }
 
 .btn-clear-sig:hover {
   color: #c0392b;
+  background: #ffffff;
 }
 
 .signature-line {
   width: 100%;
   height: 1px;
   background-color: var(--text-primary);
-  margin-bottom: 0.45rem;
+  margin-top: 3px;
+  margin-bottom: 3px;
 }
 
 .signature-label {
   font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-size: clamp(0.55rem, 2vw, 0.68rem);
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
 }
 
 .signature-name {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: clamp(0.92rem, 3.2vw, 1.05rem);
   font-style: italic;
   color: var(--text-primary);
-}
-
-/* Center Embossed Seal */
-.cert-center-seal {
-  width: 82px;
-  height: 82px;
-  color: var(--seal-color);
-  opacity: 0.85;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  margin-bottom: 2px;
-}
-
-.seal-svg {
-  width: 100%;
-  height: 100%;
+  white-space: nowrap;
 }
 
 /* ==========================================================================
    MINIMAL FOOTER
    ========================================================================== */
 .cert-footer {
-  margin-top: 1rem;
+  margin-top: 0.6rem;
+  width: 100%;
 }
 
 .footer-note {
   font-family: var(--font-sans);
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
+  font-size: clamp(0.52rem, 1.8vw, 0.62rem);
+  letter-spacing: 0.06em;
   color: var(--text-subtle);
   text-transform: uppercase;
+  line-height: 1.4;
 }
 
 /* ==========================================================================
@@ -520,19 +563,20 @@ html, body {
    ========================================================================== */
 .toast {
   position: fixed;
-  bottom: 2rem;
+  bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%) translateY(30px);
   background: #1c1b1a;
   color: #ffffff;
   font-family: var(--font-sans);
-  font-size: 0.82rem;
-  padding: 0.55rem 1.15rem;
+  font-size: 0.78rem;
+  padding: 0.45rem 1rem;
   border-radius: 4px;
   opacity: 0;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
   z-index: 200;
+  white-space: nowrap;
 }
 
 .toast.show {
@@ -541,67 +585,49 @@ html, body {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN (MOBILE & TABLET)
+   DESKTOP ENHANCEMENTS
    ========================================================================== */
-@media (max-width: 768px) {
-  .action-bar-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .action-buttons {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .page-container {
-    padding: 1rem 0.5rem 3rem 0.5rem;
-  }
-
+@media (min-width: 769px) {
   .certificate-paper {
+    padding: 24px;
+  }
+
+  .cert-frame-outer {
     padding: 12px;
   }
 
   .cert-frame-inner {
-    padding: 24px 16px;
+    padding: 38px 46px;
+  }
+
+  .corner-flourish {
+    width: 48px;
+    height: 48px;
   }
 
   .cert-couple {
-    flex-direction: column;
-    gap: 0.5rem;
+    gap: 2rem;
   }
 
-  .person-name {
-    font-size: 2.2rem;
-  }
-
-  .couple-ampersand {
-    margin: -0.2rem 0;
+  .couple-person {
+    min-width: 180px;
   }
 
   .cert-signatures {
-    flex-direction: column;
-    align-items: center;
-    gap: 1.8rem;
+    gap: 2rem;
   }
 
-  .signature-block {
-    max-width: 100%;
-    width: 240px;
-  }
-
-  .cert-center-seal {
-    margin: -0.25rem 0;
+  .top-hint-banner {
+    display: none;
   }
 }
 
 /* ==========================================================================
-   PRINT / PDF EXPORT STYLING
+   PRINT / PDF EXPORT
    ========================================================================== */
 @media print {
   @page {
-    size: landscape;
+    size: portrait;
     margin: 0;
   }
 
@@ -615,6 +641,7 @@ html, body {
   }
 
   .action-bar,
+  .top-hint-banner,
   .btn-clear-sig,
   .toast {
     display: none !important;
@@ -625,28 +652,15 @@ html, body {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    height: 100vh !important;
+    min-height: 100vh !important;
   }
 
   .certificate-paper {
     box-shadow: none !important;
     border-radius: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
+    min-height: 100vh !important;
     padding: 24px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-  }
-
-  .cert-frame-outer {
-    height: 100% !important;
-  }
-
-  .cert-frame-inner {
-    height: 100% !important;
-    justify-content: space-between !important;
-    padding: 32px 42px !important;
   }
 
   [contenteditable="true"] {

@@ -64,15 +64,13 @@
   // --- SUPABASE REALTIME SYNC ---
   function initSupabaseRealtime() {
     if (typeof window.supabase === 'undefined') {
-      console.warn('Supabase SDK not loaded yet, retrying...');
-      setTimeout(initSupabaseRealtime, 400);
+      setTimeout(initSupabaseRealtime, 350);
       return;
     }
 
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // Dedicated real-time broadcast and presence channel
       realtimeChannel = supabaseClient.channel('adam_maria_wedding_cert', {
         config: {
           broadcast: { self: false },
@@ -80,23 +78,22 @@
         }
       });
 
-      // 1. Listen for Live Signature updates
+      // 1. Live Signature sync
       realtimeChannel.on('broadcast', { event: 'sig_update' }, (payload) => {
         if (!payload || !payload.payload) return;
         const data = payload.payload;
         applyRemoteSignature(data.partner, data.dataUrl, data.clear);
       });
 
-      // 2. Listen for Live Text edits
+      // 2. Live Text sync
       realtimeChannel.on('broadcast', { event: 'text_sync' }, (payload) => {
         if (!payload || !payload.payload) return;
         const data = payload.payload;
         applyRemoteText(data.field, data.text);
       });
 
-      // 3. Listen for State Request from newly opened tabs
+      // 3. State handshake
       realtimeChannel.on('broadcast', { event: 'request_state' }, () => {
-        // Send current snapshot back to partner
         const snapshot = getCurrentState();
         realtimeChannel.send({
           type: 'broadcast',
@@ -105,26 +102,25 @@
         });
       });
 
-      // 4. Receive State Snapshot
       realtimeChannel.on('broadcast', { event: 'state_snapshot' }, (payload) => {
         if (!payload || !payload.payload) return;
         applyStateSnapshot(payload.payload);
       });
 
-      // 5. Presence Tracking (shows when both are connected)
+      // 4. Presence status
       realtimeChannel.on('presence', { event: 'sync' }, () => {
         const presenceState = realtimeChannel.presenceState();
         const userCount = Object.keys(presenceState).length;
 
         statusDot.classList.add('online');
         if (userCount >= 2) {
-          statusText.textContent = 'Live sync active • Both partners online';
+          statusText.textContent = 'Both online • Live';
         } else {
-          statusText.textContent = 'Live sync connected • Share link with Maria';
+          statusText.textContent = 'Live sync ready';
         }
       });
 
-      // Subscribe & Track Presence
+      // Subscribe & Track
       realtimeChannel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           statusDot.classList.add('online');
@@ -134,7 +130,6 @@
             user: clientSessionId
           });
 
-          // Request latest state from any already open tab
           realtimeChannel.send({
             type: 'broadcast',
             event: 'request_state',
@@ -142,17 +137,16 @@
           });
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           statusDot.classList.remove('online');
-          statusText.textContent = 'Sync offline (local mode active)';
+          statusText.textContent = 'Offline (local mode)';
         }
       });
 
     } catch (err) {
-      console.error('Supabase Realtime setup failed:', err);
-      statusText.textContent = 'Local session active';
+      console.warn('Realtime sync fallback:', err);
+      statusText.textContent = 'Local mode';
     }
   }
 
-  // Broadcast text changes
   function broadcastTextChange(fieldId, text) {
     if (!realtimeChannel) return;
     realtimeChannel.send({
@@ -163,7 +157,6 @@
     saveLocalState();
   }
 
-  // Broadcast signature changes
   function broadcastSignature(partnerId, dataUrl, clear) {
     if (!realtimeChannel) return;
     realtimeChannel.send({
@@ -174,7 +167,6 @@
     saveLocalState();
   }
 
-  // Apply signature received from partner in real time
   function applyRemoteSignature(partnerId, dataUrl, clear) {
     const pad = sigPads[partnerId];
     if (!pad) return;
@@ -182,7 +174,7 @@
     if (clear) {
       pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
       pad.hasSignature = false;
-      showToast(`Partner cleared signature ${partnerId}`);
+      showToast(`Signature cleared`);
       return;
     }
 
@@ -190,10 +182,10 @@
       const img = new Image();
       img.onload = () => {
         pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
-        // Draw image scaled to canvas
-        const dpr = window.devicePixelRatio || 1;
         const rect = pad.el.getBoundingClientRect();
-        pad.ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        const width = rect.width || pad.el.parentElement.clientWidth || 140;
+        const height = rect.height || pad.el.parentElement.clientHeight || 75;
+        pad.ctx.drawImage(img, 0, 0, width, height);
         pad.hasSignature = true;
         showToast(`Partner signed!`);
       };
@@ -201,7 +193,6 @@
     }
   }
 
-  // Apply text received from partner in real time
   function applyRemoteText(fieldId, text) {
     const el = document.querySelector(`[data-field="${fieldId}"]`);
     if (el && el !== document.activeElement) {
@@ -210,7 +201,6 @@
     }
   }
 
-  // State Snapshot Handshake
   function getCurrentState() {
     return {
       p1Name: nameP1.textContent.trim(),
@@ -239,7 +229,7 @@
     syncDependentFields();
   }
 
-  // --- SIGNATURE CANVAS ENGINE (SMOOTH HANDWRITING) ---
+  // --- SIGNATURE CANVAS ENGINE (MOBILE TOUCH + MOUSE) ---
   function setupSignaturePads() {
     [1, 2].forEach(id => {
       const pad = sigPads[id];
@@ -250,8 +240,8 @@
       function configureCanvasDPR() {
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
-        const width = rect.width || 280;
-        const height = rect.height || 85;
+        const width = rect.width || canvas.parentElement.clientWidth || 140;
+        const height = rect.height || canvas.parentElement.clientHeight || 75;
 
         // Preserve strokes if resizing
         const temp = document.createElement('canvas');
@@ -275,7 +265,9 @@
         }
       }
 
+      // Initial DPR sizing
       configureCanvasDPR();
+      setTimeout(configureCanvasDPR, 100);
       window.addEventListener('resize', debounce(configureCanvasDPR, 200));
 
       let isDrawing = false;
@@ -283,11 +275,18 @@
 
       function getCoords(e) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX !== undefined ? e.clientX : (e.touches ? e.touches[0].clientX : 0);
-        const clientY = e.clientY !== undefined ? e.clientY : (e.touches ? e.touches[0].clientY : 0);
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+          clientX = e.changedTouches[0].clientX;
+          clientY = e.changedTouches[0].clientY;
+        }
         return {
-          x: clientX - rect.left,
-          y: clientY - rect.top
+          x: (clientX !== undefined ? clientX : 0) - rect.left,
+          y: (clientY !== undefined ? clientY : 0) - rect.top
         };
       }
 
@@ -344,16 +343,17 @@
         points = [];
         pad.hasSignature = true;
 
-        // Broadcast to partner in real time!
         const dataUrl = canvas.toDataURL();
         broadcastSignature(id, dataUrl, false);
       }
 
-      // Pointer & Touch Events
+      // Touch events (passive: false is essential to prevent scrolling while signing on mobile)
       canvas.addEventListener('touchstart', start, { passive: false });
       canvas.addEventListener('touchmove', move, { passive: false });
       window.addEventListener('touchend', end);
+      window.addEventListener('touchcancel', end);
 
+      // Mouse events
       canvas.addEventListener('mousedown', start);
       canvas.addEventListener('mousemove', move);
       window.addEventListener('mouseup', end);
@@ -381,18 +381,17 @@
   }
 
   function syncDependentFields() {
-    // Signature labels
     const p1 = nameP1.textContent.trim() || 'Adam';
     const p2 = nameP2.textContent.trim() || 'Maria';
     labelP1.textContent = p1;
     labelP2.textContent = p2;
 
-    // Seal Monogram
     const init1 = (p1[0] || 'A').toUpperCase();
     const init2 = (p2[0] || 'M').toUpperCase();
-    sealMonogramText.textContent = `${init1} & ${init2}`;
+    if (sealMonogramText) {
+      sealMonogramText.textContent = `${init1} & ${init2}`;
+    }
 
-    // Year from date
     const yearMatch = certDate.textContent.match(/\b(20\d\d)\b/);
     if (yearMatch && sealYearText) {
       sealYearText.textContent = yearMatch[1];
@@ -415,7 +414,6 @@
   }
 
   function loadLocalAndHashState() {
-    // 1. Try URL hash first
     let loadedFromHash = false;
     if (window.location.hash && window.location.hash.length > 1) {
       try {
@@ -429,7 +427,6 @@
       } catch (e) {}
     }
 
-    // 2. Fallback to localStorage if no hash
     if (!loadedFromHash) {
       try {
         const saved = localStorage.getItem('wedding_cert_state');
@@ -450,7 +447,6 @@
 
   // --- ACTION BUTTONS (SHARE, PRINT, DOWNLOAD) ---
   function setupActions() {
-    // Share Link
     btnShare.addEventListener('click', () => {
       const params = new URLSearchParams();
       params.set('p1', nameP1.textContent.trim());
@@ -462,25 +458,27 @@
 
       const url = `${window.location.origin}${window.location.pathname}#${params.toString()}`;
 
-      navigator.clipboard.writeText(url).then(() => {
-        showToast('Shareable link copied to clipboard');
-      }).catch(() => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Share link copied!');
+        }).catch(() => {
+          window.location.hash = params.toString();
+          showToast('Link updated in address bar');
+        });
+      } else {
         window.location.hash = params.toString();
         showToast('Link updated in address bar');
-      });
+      }
     });
 
-    // Print
     btnPrint.addEventListener('click', () => {
       window.print();
     });
 
-    // High-Res Image Download
     btnDownload.addEventListener('click', async () => {
       const cert = document.getElementById('certificate');
       btnDownload.textContent = 'Saving...';
 
-      // Temporarily hide clear buttons during capture
       document.querySelectorAll('.btn-clear-sig').forEach(b => b.style.display = 'none');
 
       try {
@@ -500,13 +498,13 @@
         link.click();
         document.body.removeChild(link);
 
-        showToast('Certificate saved to downloads');
+        showToast('Certificate saved');
       } catch (err) {
         console.error(err);
-        showToast('Could not save image. Try Print instead.');
+        showToast('Could not save image. Try PDF instead.');
       } finally {
         document.querySelectorAll('.btn-clear-sig').forEach(b => b.style.display = '');
-        btnDownload.textContent = 'Save Image';
+        btnDownload.textContent = 'Save';
       }
     });
   }
@@ -519,7 +517,7 @@
     toast.classList.add('show');
     toastTimer = setTimeout(() => {
       toast.classList.remove('show');
-    }, 2800);
+    }, 2600);
   }
 
   function debounce(fn, ms) {
@@ -530,7 +528,6 @@
     };
   }
 
-  // Run on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
