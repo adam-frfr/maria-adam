@@ -35,6 +35,13 @@
         <button type="button" id="btn-share" class="btn btn-sm" title="Copy share link">Share</button>
         <button type="button" id="btn-print" class="btn btn-sm" title="Print or save as PDF">PDF</button>
         <button type="button" id="btn-download" class="btn btn-sm btn-primary" title="Download certificate image">Save</button>
+        <button type="button" id="btn-lock" class="btn btn-sm btn-lock-active" title="Lock certificate" style="display: none;">🔒 Lock</button>
+        <button type="button" id="btn-settings" class="btn btn-sm btn-icon" title="Settings / Unlock with Passcode" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </header>
@@ -240,6 +247,34 @@
           <button type="button" id="btn-modal-cancel" class="btn">Cancel</button>
           <button type="button" id="btn-modal-done" class="btn btn-primary">Done / Place Signature</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Passcode Settings / Unlock Modal -->
+  <div class="sig-modal" id="pin-modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="sig-modal-backdrop" id="pin-modal-backdrop"></div>
+    <div class="sig-modal-card pin-modal-card">
+      <div class="sig-modal-header">
+        <div>
+          <h3 class="sig-modal-title">Certificate Settings</h3>
+          <p class="sig-modal-desc">Enter passcode to unlock editing & signature changes</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-pin-close" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="pin-modal-body">
+        <label for="pin-input" class="pin-label">Passcode</label>
+        <div class="pin-input-wrap">
+          <input type="password" id="pin-input" class="pin-input" inputmode="numeric" placeholder="Enter PIN (e.g. 2026)" maxlength="12" autocomplete="off">
+        </div>
+        <p class="pin-error" id="pin-error">Incorrect passcode. Try again.</p>
+        <p class="pin-hint">Default passcode: <strong>2026</strong> (wedding year)</p>
+      </div>
+
+      <div class="sig-modal-actions">
+        <button type="button" id="btn-pin-cancel" class="btn">Cancel</button>
+        <button type="button" id="btn-pin-submit" class="btn btn-primary">Unlock Certificate</button>
       </div>
     </div>
   </div>

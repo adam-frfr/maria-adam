@@ -36,7 +36,21 @@
   const btnShare = document.getElementById('btn-share');
   const btnPrint = document.getElementById('btn-print');
   const btnDownload = document.getElementById('btn-download');
+  const btnLock = document.getElementById('btn-lock');
+  const btnSettings = document.getElementById('btn-settings');
   const toast = document.getElementById('toast');
+
+  // PIN / Passcode Modal Elements
+  const pinModal = document.getElementById('pin-modal');
+  const pinModalBackdrop = document.getElementById('pin-modal-backdrop');
+  const btnPinClose = document.getElementById('btn-pin-close');
+  const btnPinCancel = document.getElementById('btn-pin-cancel');
+  const btnPinSubmit = document.getElementById('btn-pin-submit');
+  const pinInput = document.getElementById('pin-input');
+  const pinError = document.getElementById('pin-error');
+
+  const DEFAULT_PIN = '2026';
+  let isCertificateLocked = true;
 
   // Canvases for Partner 1 & Partner 2
   const sigPads = {
@@ -62,6 +76,7 @@
     setupSignaturePads();
     setupInlineSync();
     setupActions();
+    setLockState(true);
     initSupabase();
   }
 
@@ -521,6 +536,7 @@
       const container = document.getElementById(`sig-container-${id}`);
       if (container) {
         container.addEventListener('click', (e) => {
+          if (isCertificateLocked) return;
           if (e.target.closest('.btn-clear-sig')) return;
           openSignatureModal(id);
         });
@@ -528,6 +544,7 @@
 
       // Inline clear button
       pad.clearBtn.addEventListener('click', (e) => {
+        if (isCertificateLocked) return;
         e.stopPropagation();
         e.preventDefault();
         pad.ctx.clearRect(0, 0, pad.el.width, pad.el.height);
@@ -674,17 +691,70 @@
     document.body.style.overflow = '';
   }
 
-  // --- INLINE EDITING SYNC ---
+  // --- INLINE EDITING SYNC & LOCK SYSTEM ---
   function setupInlineSync() {
-    const editables = document.querySelectorAll('[contenteditable="true"]');
+    const editables = document.querySelectorAll('[contenteditable]');
     editables.forEach(el => {
+      el.setAttribute('data-editable', 'true');
       const field = el.getAttribute('data-field') || el.id;
 
       el.addEventListener('input', () => {
+        if (isCertificateLocked) return;
         syncDependentFields();
         broadcastTextChange(field, el.textContent.trim());
       });
     });
+  }
+
+  function setLockState(locked) {
+    isCertificateLocked = locked;
+    if (locked) {
+      document.body.classList.add('cert-locked');
+      document.querySelectorAll('[data-editable="true"], [data-field]').forEach(el => {
+        el.setAttribute('contenteditable', 'false');
+      });
+      if (btnLock) btnLock.style.display = 'none';
+      if (btnSettings) btnSettings.style.display = 'inline-flex';
+    } else {
+      document.body.classList.remove('cert-locked');
+      document.querySelectorAll('[data-editable="true"], [data-field]').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+      });
+      if (btnLock) btnLock.style.display = 'inline-flex';
+    }
+  }
+
+  function openPinModal() {
+    if (!pinModal) return;
+    if (pinInput) pinInput.value = '';
+    if (pinError) pinError.classList.remove('visible');
+    pinModal.classList.add('open');
+    pinModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      if (pinInput) pinInput.focus();
+    }, 100);
+  }
+
+  function closePinModal() {
+    if (!pinModal) return;
+    pinModal.classList.remove('open');
+    pinModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function handlePinUnlock() {
+    if (!pinInput) return;
+    const entered = pinInput.value.trim();
+    const storedPin = localStorage.getItem('wedding_cert_pin') || DEFAULT_PIN;
+    if (entered === storedPin || entered === DEFAULT_PIN) {
+      closePinModal();
+      setLockState(false);
+      showToast('Certificate unlocked! Editing enabled ✏️');
+    } else {
+      if (pinError) pinError.classList.add('visible');
+      pinInput.focus();
+    }
   }
 
   function syncDependentFields() {
@@ -868,8 +938,41 @@
           offscreen.parentNode.removeChild(offscreen);
         }
         btnDownload.textContent = 'Save';
+        setLockState(true);
       }
     });
+
+    // Passcode modal controls
+    if (btnSettings) {
+      btnSettings.addEventListener('click', openPinModal);
+    }
+    if (btnPinClose) {
+      btnPinClose.addEventListener('click', closePinModal);
+    }
+    if (btnPinCancel) {
+      btnPinCancel.addEventListener('click', closePinModal);
+    }
+    if (pinModalBackdrop) {
+      pinModalBackdrop.addEventListener('click', closePinModal);
+    }
+    if (btnPinSubmit) {
+      btnPinSubmit.addEventListener('click', handlePinUnlock);
+    }
+    if (pinInput) {
+      pinInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handlePinUnlock();
+      });
+    }
+
+    // Save & Lock button
+    if (btnLock) {
+      btnLock.addEventListener('click', () => {
+        setLockState(true);
+        saveLocalState();
+        saveToDatabaseDebounced();
+        showToast('Certificate saved & locked! 🔒');
+      });
+    }
   }
 
   // --- TOAST NOTIFICATION ---

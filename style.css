@@ -749,6 +749,130 @@ html, body {
     height: clamp(260px, 52vh, 340px);
   }
 }
+
+/* ==========================================================================
+   PIN / PASSCODE MODAL & LOCK STYLES
+   ========================================================================== */
+.pin-modal-card {
+  max-width: 380px;
+}
+
+.pin-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+.pin-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.pin-input-wrap {
+  width: 100%;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+  text-align: center;
+  border: 1px solid var(--border-outer);
+  border-radius: 6px;
+  background: #fdfbf7;
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.pin-input:focus {
+  border-color: var(--text-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+}
+
+.pin-error {
+  display: none;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: #c0392b;
+  margin: 0;
+}
+
+.pin-error.visible {
+  display: block;
+}
+
+.pin-hint {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  color: var(--text-secondary);
+}
+
+.btn-icon:hover {
+  color: var(--text-primary);
+}
+
+.btn-lock-active {
+  background: #171615 !important;
+  color: #ffffff !important;
+  border-color: #171615 !important;
+}
+
+.btn-lock-active:hover {
+  background: #000000 !important;
+}
+
+/* ==========================================================================
+   LOCKED / KEEPSAKE DISPLAY MODE
+   ========================================================================== */
+body.cert-locked [contenteditable="true"],
+body.cert-locked [contenteditable="false"] {
+  cursor: default !important;
+  border-bottom: none !important;
+  user-select: text;
+}
+
+body.cert-locked [contenteditable]:hover,
+body.cert-locked [contenteditable]:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body.cert-locked .signature-pad-container {
+  cursor: default !important;
+  background: transparent !important;
+}
+
+body.cert-locked .signature-pad-container:hover {
+  background: transparent !important;
+}
+
+body.cert-locked .sig-tap-hint,
+body.cert-locked .btn-clear-sig {
+  display: none !important;
+}
+
+body.cert-locked .top-hint-banner {
+  display: none !important;
+}
 .cert-footer {
   margin-top: 0.6rem;
   width: 100%;
